@@ -2,11 +2,12 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
-import { login } from 'src/apis/auth.api'
-import Input from 'src/components/Input'
-import { ResponseUnprocessableEntityApi } from 'src/types/utils.type'
-import { schema, Schema } from 'src/utils/rules'
-import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
+import { login } from '@/apis/auth.api'
+import Input from '@/components/Input'
+import { ResponseUnprocessableEntityApi } from '@/types/utils.type'
+import { schema, Schema } from '@/utils/rules'
+import { isAxiosUnprocessableEntityError } from '@/utils/utils'
+import { Button } from '@/components/ui/button'
 
 type FormData = Pick<Schema, 'email' | 'password'>
 
@@ -69,6 +70,7 @@ export default function Login() {
                 autoComplete='on'
               />
               <div className='mt-2'>
+                <Button>Đăng nhập</Button>
                 <button
                   type='submit'
                   className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600'

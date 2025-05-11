@@ -1,5 +1,5 @@
-import { User } from 'src/types/user.type'
-import { ResponseApi } from 'src/types/utils.type'
+import { User } from '@/types/user.type'
+import { ResponseApi } from '@/types/utils.type'
 
 export type AuthResponse = ResponseApi<{
   user: Omit<User, 'password' | 'totpSecret'>

@@ -1,6 +1,6 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios'
 import { toast } from 'react-toastify'
-import HttpStatusCode from 'src/constants/httpStatusCode.enum'
+import HttpStatusCode from '@/constants/httpStatusCode.enum'
 
 class Http {
   instance: AxiosInstance

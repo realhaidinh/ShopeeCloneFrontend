@@ -19,7 +19,7 @@ export default function Input({
   name,
   register,
   rules,
-  autoComplete
+  autoComplete = 'off'
 }: Props) {
   return (
     <div className={className}>

@@ -1,3 +1,3 @@
-import RegisterHeader from 'src/components/RegisterHeader/RegisterHeader'
+import RegisterHeader from './RegisterHeader'
 
 export default RegisterHeader

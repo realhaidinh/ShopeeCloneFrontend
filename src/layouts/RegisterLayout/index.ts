@@ -1,3 +1,3 @@
-import RegisterLayout from 'src/layouts/RegisterLayout/RegisterLayout'
+import RegisterLayout from './RegisterLayout'
 
 export default RegisterLayout
