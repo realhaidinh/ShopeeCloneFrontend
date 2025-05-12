@@ -48,6 +48,14 @@ export const getRules = (getValues?: UseFormGetValues<any>): Rules => ({
   }
 })
 
+export const emailSchema = yup
+  .object({
+    email: yup.string().required('Email là bắt buộc').email('Email không đúng định dạng')
+  })
+  .required()
+
+export type emailType = yup.InferType<typeof emailSchema>
+
 export const schema = yup
   .object({
     email: yup.string().required('Email là bắt buộc').email('Email không đúng định dạng'),

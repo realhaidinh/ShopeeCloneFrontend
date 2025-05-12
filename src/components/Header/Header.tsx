@@ -1,8 +1,8 @@
 import { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Select, Dropdown, Space, Button, Popover, Avatar, Badge } from 'antd'
+import { Select, Dropdown, Space, Button, Popover, Badge } from 'antd'
 import type { MenuProps } from 'antd'
-import { DownOutlined, SmileOutlined } from '@ant-design/icons'
+import { DownOutlined, UserOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
 import { logout } from 'src/apis/auth.api'
 import { AppContext } from 'src/contexts/app.context'
@@ -182,16 +182,12 @@ export default function Header() {
           </div>
           {isAuthenticated && (
             <div className='flex items-center py-1 hover:text-gray-300 cursor-pointer ml-6'>
-              <div className='w-6 h-6 mr-2 flex-shrink-0'>
-                <img
-                  src='https://cf.shopee.vn/file/d04ea22afab6e6d250a370d7ccc2e675_tn'
-                  alt='avatar'
-                  className='w-full h-full object-cover rounded-full'
-                />
+              <div className='w-6 h-6 mr-1 flex-shrink-0'>
+                <UserOutlined style={{ fontSize: '20px' }} />
               </div>
               <Dropdown menu={{ items }}>
                 <Space>
-                  Hi, {profile?.name}
+                  Hi, {profile?.email}
                   <DownOutlined className='text-xs' />
                 </Space>
               </Dropdown>
