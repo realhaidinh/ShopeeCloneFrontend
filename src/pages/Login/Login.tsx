@@ -1,16 +1,22 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
+import { Spin } from 'antd'
+import { useContext } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { login } from 'src/apis/auth.api'
 import Input from 'src/components/Input'
+import { AppContext } from 'src/contexts/app.context'
 import { ResponseUnprocessableEntityApi } from 'src/types/utils.type'
 import { schema, Schema } from 'src/utils/rules'
 import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
+import { LoadingOutlined } from '@ant-design/icons'
 
 type FormData = Pick<Schema, 'email' | 'password'>
 
 export default function Login() {
+  const { setIsAuthenticated, setProfile } = useContext(AppContext)
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
@@ -27,7 +33,9 @@ export default function Login() {
     const body = data
     loginMutation.mutate(body, {
       onSuccess: (data) => {
-        console.log(data)
+        setIsAuthenticated(true)
+        setProfile(data.data.data.user)
+        navigate('/')
       },
       onError: (error) => {
         if (isAxiosUnprocessableEntityError<ResponseUnprocessableEntityApi<FormData>>(error)) {
@@ -71,9 +79,11 @@ export default function Login() {
               <div className='mt-2'>
                 <button
                   type='submit'
-                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600'
+                  className='flex items-center justify-center w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed'
+                  disabled={loginMutation.isLoading}
                 >
-                  Đăng nhập
+                  {loginMutation.isLoading && <Spin indicator={<LoadingOutlined spin />} />}
+                  <span className='ml-2'> Đăng nhập</span>
                 </button>
               </div>
               <div className='flex items-center justify-center mt-8 gap-1'>

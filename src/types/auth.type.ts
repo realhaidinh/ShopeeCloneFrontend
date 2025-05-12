@@ -10,5 +10,6 @@ export type LoginResponse = {
   data: {
     accessToken: string
     refreshToken: string
+    user: Omit<User, 'password' | 'totpSecret'>
   }
 }

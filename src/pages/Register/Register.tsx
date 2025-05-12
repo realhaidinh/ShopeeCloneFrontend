@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Input from 'src/components/Input'
 import { Schema, schema } from 'src/utils/rules'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -7,10 +7,14 @@ import { useMutation } from '@tanstack/react-query'
 import { registerAccount } from 'src/apis/auth.api'
 import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import { ResponseUnprocessableEntityApi } from 'src/types/utils.type'
+import { Button } from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
+import { Spin } from 'antd'
 
 type FormData = Schema
 
 export default function Register() {
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
@@ -28,7 +32,7 @@ export default function Register() {
     const body = data
     registerAccountMutation.mutate(body, {
       onSuccess: (data) => {
-        console.log(data)
+        navigate('/login')
       },
       onError: (error) => {
         if (isAxiosUnprocessableEntityError<ResponseUnprocessableEntityApi<FormData>>(error)) {
@@ -105,9 +109,11 @@ export default function Register() {
               <div className='mt-2'>
                 <button
                   type='submit'
-                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600'
+                  className='flex items-center justify-center w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed'
+                  disabled={registerAccountMutation.isLoading}
                 >
-                  Đăng ký
+                  {registerAccountMutation.isLoading && <Spin indicator={<LoadingOutlined spin />} />}
+                  <span className='ml-2'>Đăng ký</span>
                 </button>
               </div>
               <div className='flex items-center justify-center mt-8 gap-1'>
