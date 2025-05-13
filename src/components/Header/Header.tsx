@@ -7,6 +7,7 @@ import { useMutation } from '@tanstack/react-query'
 import { logout } from 'src/apis/auth.api'
 import { AppContext } from 'src/contexts/app.context'
 import { getRefreshTokenFromLS } from 'src/utils/auth'
+import { toast } from 'react-toastify'
 
 export default function Header() {
   const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
@@ -15,6 +16,7 @@ export default function Header() {
     onSuccess: () => {
       setIsAuthenticated(false)
       setProfile(null)
+      toast.success('Logout successfully')
     }
   })
   const handleLogout = () => {
@@ -53,7 +55,7 @@ export default function Header() {
             <img
               src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
               alt='anh'
-              className='w-11 h-11 object-cover'
+              className='w-11 h-11 w-full object-cover'
             />
           </div>
           <div className='flex-grow ml-2 overflow-hidden'>

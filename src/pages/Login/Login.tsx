@@ -11,6 +11,7 @@ import { ResponseUnprocessableEntityApi } from 'src/types/utils.type'
 import { schema, Schema } from 'src/utils/rules'
 import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import { LoadingOutlined } from '@ant-design/icons'
+import { toast } from 'react-toastify'
 
 type FormData = Pick<Schema, 'email' | 'password'>
 
@@ -36,6 +37,7 @@ export default function Login() {
         setIsAuthenticated(true)
         setProfile(data.data.data.user)
         navigate('/')
+        toast.success(data.data.message)
       },
       onError: (error) => {
         if (isAxiosUnprocessableEntityError<ResponseUnprocessableEntityApi<FormData>>(error)) {
