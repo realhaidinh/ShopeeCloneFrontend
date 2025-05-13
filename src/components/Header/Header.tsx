@@ -241,7 +241,7 @@ export default function Header() {
               </button>
             </div>
           </form>
-          <div className='cols-span-1 ml-8'>
+          <div className='cols-span-1 ml-5'>
             <Badge count={99} overflowCount={10}>
               <Popover
                 placement='bottom'
