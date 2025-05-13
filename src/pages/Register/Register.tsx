@@ -4,13 +4,12 @@ import Input from 'src/components/Input'
 import { Schema, schema } from 'src/utils/rules'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
-import { registerAccount, sendOTPRegister } from 'src/apis/auth.api'
+import authApi from 'src/apis/auth.api'
 import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import { ResponseUnprocessableEntityApi } from 'src/types/utils.type'
 import { Button, message, Steps, Spin } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { useState } from 'react'
-import { TypeOfVerificationCodeType } from 'src/constants/auth.constant'
 import EmailOtp from 'src/components/Others'
 
 type FormData = Schema
@@ -37,7 +36,7 @@ export default function Register() {
   })
 
   const registerAccountMutation = useMutation({
-    mutationFn: (body: FormData) => registerAccount(body)
+    mutationFn: (body: FormData) => authApi.registerAccount(body)
   })
 
   const onSubmit = handleSubmit((data) => {

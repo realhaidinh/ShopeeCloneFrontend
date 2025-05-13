@@ -1,9 +1,24 @@
+import { useQuery } from '@tanstack/react-query'
 import { Carousel } from 'antd'
+import { useState } from 'react'
+import productApi from 'src/apis/product.api'
+import Pagination from 'src/components/Pagination'
+import useQueryParams from 'src/hooks/useQueryParams'
 import AsideFilter from 'src/pages/ProductList/AsideFilter'
 import Product from 'src/pages/ProductList/Product/Product'
 import SortProductList from 'src/pages/ProductList/SortProductList'
 
 export default function ProductList() {
+  const queryParams = useQueryParams()
+  const [page, setPage] = useState(1)
+  const [totalPage, setTotalPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const { data } = useQuery({
+    queryKey: ['products', queryParams],
+    queryFn: () => {
+      return productApi.getProducts(queryParams)
+    }
+  })
   return (
     <div>
       <div className='my-5'>
@@ -37,14 +52,21 @@ export default function ProductList() {
             <div className='col-span-9'>
               <SortProductList />
               <div className='mt-6 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'>
-                {Array(30)
-                  .fill(0)
-                  .map((_, index) => (
-                    <div key={index} className='col-span-1'>
-                      <Product />
+                {data &&
+                  data.data.data.map((product) => (
+                    <div key={product.id} className='col-span-1'>
+                      <Product product={product} />
                     </div>
                   ))}
               </div>
+              <Pagination
+                page={page}
+                setPage={setPage}
+                totalPage={totalPage}
+                setTotalPage={setTotalPage}
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+              />
             </div>
           </div>
         </div>

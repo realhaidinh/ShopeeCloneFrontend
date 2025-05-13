@@ -4,7 +4,7 @@ import { Select, Dropdown, Space, Button, Popover, Badge } from 'antd'
 import type { MenuProps } from 'antd'
 import { DownOutlined, UserOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
-import { logout } from 'src/apis/auth.api'
+import authApi from 'src/apis/auth.api'
 import { AppContext } from 'src/contexts/app.context'
 import { getRefreshTokenFromLS } from 'src/utils/auth'
 import { toast } from 'react-toastify'
@@ -12,7 +12,7 @@ import { toast } from 'react-toastify'
 export default function Header() {
   const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
   const logoutMutation = useMutation({
-    mutationFn: (body: { refreshToken: string }) => logout(body),
+    mutationFn: (body: { refreshToken: string }) => authApi.logout(body),
     onSuccess: () => {
       setIsAuthenticated(false)
       setProfile(null)

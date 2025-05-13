@@ -1,0 +1,160 @@
+import { OrderBy, SortBy } from 'src/constants/product'
+
+export interface Variant {
+  value: string
+  options: string[]
+}
+
+export interface Translation {
+  id: number
+  name: string
+  description: string
+  languageId: string
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Sku {
+  id: number
+  value: string
+  price: number
+  stock: number
+  image: string
+  productId: number
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CategoryTranslation {
+  id: number
+  categoryId: number
+  languageId: string
+  name: string
+  description: string
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Category {
+  id: number
+  parentCategoryId: number
+  name: string
+  logo: string
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+  categoryTranslations: CategoryTranslation[]
+}
+
+export interface BrandTranslation {
+  id: number
+  brandId: number
+  languageId: string
+  name: string
+  description: string
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Brand {
+  id: number
+  name: string
+  logo: string
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+  brandTranslations: BrandTranslation[]
+}
+
+export interface Order {
+  id: number
+  userId: number
+  status: string
+  receiver: OrderReceiver
+  shopId: number
+  paymentId: number
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderReceiver {
+  name: string
+  phone: string
+  address: string
+}
+
+export interface ProductSKUSnapshot {
+  id: number
+  productId: number
+  quantity: number
+}
+
+export interface Product {
+  id: number
+  publishedAt: string
+  name: string
+  basePrice: number
+  virtualPrice: number
+  brandId: number
+  images: string[]
+  variants: Variant[]
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+  productTranslations: Translation[]
+  skus: Sku[]
+  categories: Category[]
+  brand: Brand
+  orders?: Order[]
+  productSKUSnapshots?: ProductSKUSnapshot[]
+}
+
+export interface ProductList {
+  data: Product[]
+  totalItems: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface ProductListConfig {
+  page?: number // default: 1
+  limit?: number // default: 10
+  name?: string
+  brandIds?: number[]
+  categories?: number[]
+  minPrice?: number
+  maxPrice?: number
+  createdById?: number
+  orderBy?: OrderBy // default: OrderBy.Desc
+  sortBy?: SortBy // default: SortBy.CreatedAt
+}

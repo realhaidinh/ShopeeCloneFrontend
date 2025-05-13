@@ -11,3 +11,9 @@ export interface ResponseUnprocessableEntityApi<T> {
     message: string
   }[]
 }
+
+export interface NotFoundApi {
+  error: string
+  statusCode: number
+  message: string
+}

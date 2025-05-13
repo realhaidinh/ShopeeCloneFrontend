@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { Button, Input, message, Spin } from 'antd'
-import { sendOTPRegister } from 'src/apis/auth.api'
+import authApi from 'src/apis/auth.api'
 import { VerificationCode } from 'src/constants/auth.constant'
 import { ResponseUnprocessableEntityApi } from 'src/types/utils.type'
 import { emailType } from 'src/utils/rules'
@@ -16,7 +16,7 @@ interface Props {
 
 export default function EmailOtp({ email, setEmail, setCurrent, setValue }: Props) {
   const sendOtpMutation = useMutation({
-    mutationFn: sendOTPRegister,
+    mutationFn: authApi.sendOTPRegister,
     onSuccess: () => {
       message.success('Đã gửi mã OTP về email')
       setCurrent(1)
