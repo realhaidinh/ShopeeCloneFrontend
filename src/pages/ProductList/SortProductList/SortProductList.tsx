@@ -1,39 +1,88 @@
 import { Select, Pagination } from 'antd'
 import './index.css'
-export default function SortProductList() {
+import { QueryConfig } from 'src/pages/ProductList/ProductList'
+import { createSearchParams, useNavigate } from 'react-router-dom'
+import { ProductListConfig } from 'src/types/product.type'
+import { omit } from 'lodash'
+import { OrderBy } from 'src/constants/product'
+
+interface Props {
+  queryConfig: QueryConfig
+  totalPages: number
+  totalItems: number
+}
+export default function SortProductList({ queryConfig, totalPages, totalItems }: Props) {
+  const navigate = useNavigate()
+  const { sortBy, orderBy } = queryConfig
+
+  const handleSort = (sortByValue: Exclude<ProductListConfig['sortBy'], undefined>) => {
+    navigate({
+      pathname: '/',
+      search: createSearchParams(
+        omit(
+          {
+            ...queryConfig,
+            sortBy: sortByValue
+          },
+          ['orderBy']
+        )
+      ).toString()
+    })
+  }
+  const handlePriceOrder = (value: Exclude<ProductListConfig['orderBy'], undefined>) => {
+    console.log(value)
+    navigate({
+      pathname: '/',
+      search: createSearchParams({
+        ...queryConfig,
+        sortBy: 'price',
+        orderBy: value
+      }).toString()
+    })
+  }
   return (
     <div className='bg-gray-300/40 py-4 px-3'>
       <div className='flex flex-wrap items-center justify-between gap-2'>
-        <div className='flex items-center flex-wrap gap-2'>
+        <div className='flex flex-wrap items-center gap-2'>
           <div>Sắp xếp theo</div>
-          <button className='h-8 px-4 capitalize bg-orange text-white text-sm hover:bg-orange/80 text-center'>
+          <button
+            className={`h-8 px-4 text-sm capitalize hover:bg-orange/80 ${
+              sortBy === 'createdAt' ? 'bg-orange text-white' : 'bg-white text-black'
+            }`}
+            onClick={() => handleSort('createdAt')}
+          >
             Mới nhất
           </button>
-          <button className='h-8 px-4 capitalize bg-white text-black text-sm hover:bg-slate-100 text-center'>
+          <button
+            className={`h-8 px-4 text-sm capitalize hover:bg-orange/80 ${
+              sortBy === 'sale' ? 'bg-orange text-white' : 'bg-white text-black'
+            }`}
+            onClick={() => handleSort('sale')}
+          >
             Bán chạy
           </button>
           <Select
             placeholder='Giá'
-            defaultValue={'price:asc'}
+            value={sortBy === 'price' ? (orderBy as OrderBy | undefined) : undefined}
             className='custom-select'
-            // onChange={onChange}
+            onChange={handlePriceOrder}
             // onSearch={onSearch}
             style={{ width: 200, height: '2.25rem' }}
             options={[
               {
-                value: 'price:asc',
+                value: 'asc',
                 label: 'Giá: Thấp đến Cao'
               },
               {
-                value: 'price:desc',
+                value: 'desc',
                 label: 'Giá: Cao đến Thấp'
               }
             ]}
           />
         </div>
-        <div>
+        {/* <div>
           <Pagination size='small' simple defaultCurrent={1} pageSize={5} total={50} />
-        </div>
+        </div> */}
       </div>
     </div>
   )

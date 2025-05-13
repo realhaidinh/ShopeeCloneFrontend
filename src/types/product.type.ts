@@ -147,14 +147,14 @@ export interface ProductList {
 }
 
 export interface ProductListConfig {
-  page?: number // default: 1
-  limit?: number // default: 10
+  page?: number | string // default: 1
+  limit?: number | string // default: 10
   name?: string
   brandIds?: number[]
   categories?: number[]
-  minPrice?: number
-  maxPrice?: number
-  createdById?: number
+  minPrice?: number | string
+  maxPrice?: number | string
+  createdById?: number | string
   orderBy?: OrderBy // default: OrderBy.Desc
   sortBy?: SortBy // default: SortBy.CreatedAt
 }

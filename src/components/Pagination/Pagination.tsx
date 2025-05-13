@@ -1,35 +1,42 @@
 import type { PaginationProps } from 'antd'
 import { Pagination as PaginationAntd } from 'antd'
+import { useNavigate, createSearchParams } from 'react-router-dom'
+import { QueryConfig } from 'src/pages/ProductList/ProductList'
 
 interface Props {
-  page: number
-  setPage: React.Dispatch<React.SetStateAction<number>>
-  totalPage: number
-  setTotalPage: React.Dispatch<React.SetStateAction<number>>
-  pageSize: number
-  setPageSize: React.Dispatch<React.SetStateAction<number>>
+  queryConfig: QueryConfig
+  totalPages: number
+  totalItems: number
 }
 
-export default function Pagination({ page, setPage, pageSize, setPageSize, totalPage, setTotalPage }: Props) {
+export default function Pagination({ queryConfig, totalPages, totalItems }: Props) {
+  const page = Number(queryConfig.page)
+  const limit = Number(queryConfig.limit)
+  const navigate = useNavigate()
   const onChange: PaginationProps['onChange'] = (pageNumber) => {
-    console.log('Page: ', pageNumber)
-    setPage(pageNumber)
+    navigate({
+      pathname: '/',
+      search: createSearchParams({
+        ...queryConfig,
+        page: pageNumber.toString()
+      }).toString()
+    })
   }
   const onShowSizeChange: PaginationProps['onShowSizeChange'] = (current, pageSize) => {
     console.log(current, pageSize)
-    setPageSize(pageSize)
   }
   return (
     <div className='mt-6'>
       <PaginationAntd
         align='center'
-        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+        showTotal={(totalItems, range) => `${range[0]}-${range[1]} of ${totalItems} items`}
         showQuickJumper
-        defaultCurrent={page}
-        total={100}
+        current={page} // dùng current thay vì defaultCurrent
+        total={totalItems}
         onChange={onChange}
         style={{ textAlign: 'center' }}
         onShowSizeChange={onShowSizeChange}
+        pageSize={limit}
       />
     </div>
   )

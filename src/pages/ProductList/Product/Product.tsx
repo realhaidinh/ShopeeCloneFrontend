@@ -8,22 +8,22 @@ interface Props {
 export default function Product({ product }: Props) {
   return (
     <Link to='/'>
-      <div className='bg-white w-full h-full shadow rounded-sm hover:translate-y-[-0.1rem] hover:shadow-md duration-100 transition-transform overflow-hidden hover:border-[2px] border-orange/70'>
-        <div className='w-full pt-[100%] relative'>
+      <div className='h-full w-full overflow-hidden rounded-sm border-orange/70 bg-white shadow transition-transform duration-100 hover:translate-y-[-0.1rem] hover:border-[2px] hover:shadow-md'>
+        <div className='relative w-full pt-[100%]'>
           <img
             src={product.images[0]}
             alt={product.name}
-            className='absolute top-0 left-0 bg-white w-full h-full object-cover'
+            className='absolute top-0 left-0 h-full w-full bg-white object-cover'
           />
         </div>
-        <div className='p-2 overflow-hidden'>
-          <div className='min-h-[2rem] line-clamp-2 text-sm'>{product.productTranslations[0].name}</div>
-          <div className='flex items-center mt-3 justify-end font-medium'>
-            <div className='line-through max-w-[50%] text-gray-500 truncate text-xs'>
+        <div className='overflow-hidden p-2'>
+          <div className='min-h-[2rem] text-sm line-clamp-2'>{product.productTranslations[0]?.name || ''}</div>
+          <div className='mt-3 flex items-center justify-end font-medium'>
+            <div className='max-w-[50%] truncate text-xs text-gray-500 line-through'>
               <span className='text-xs'>₫</span>
               <span>{formatCurrency(product.virtualPrice)}</span>
             </div>
-            <div className='text-orange truncate ml-1'>
+            <div className='ml-1 truncate text-orange'>
               <span className='text-xs'>₫</span>
               <span>{formatCurrency(product.basePrice)}</span>
             </div>

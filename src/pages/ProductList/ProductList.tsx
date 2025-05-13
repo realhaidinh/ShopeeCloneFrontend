@@ -1,28 +1,50 @@
 import { useQuery } from '@tanstack/react-query'
-import { Carousel } from 'antd'
+import { Carousel, Spin } from 'antd'
 import { useState } from 'react'
+import { omitBy, isUndefined } from 'lodash'
 import productApi from 'src/apis/product.api'
 import Pagination from 'src/components/Pagination'
 import useQueryParams from 'src/hooks/useQueryParams'
 import AsideFilter from 'src/pages/ProductList/AsideFilter'
 import Product from 'src/pages/ProductList/Product/Product'
 import SortProductList from 'src/pages/ProductList/SortProductList'
+import { ProductListConfig } from 'src/types/product.type'
+import { orderBy, sortBy } from 'src/constants/product'
+
+export type QueryConfig = {
+  [key in keyof ProductListConfig]: string
+}
 
 export default function ProductList() {
-  const queryParams = useQueryParams()
-  const [page, setPage] = useState(1)
-  const [totalPage, setTotalPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const queryParams: QueryConfig = useQueryParams()
+  const queryConfig: QueryConfig = omitBy(
+    {
+      page: queryParams.page || '1',
+      limit: queryParams.limit || '10',
+      name: queryParams.name,
+      brandIds: queryParams.brandIds,
+      categories: queryParams.categories,
+      minPrice: queryParams.minPrice,
+      maxPrice: queryParams.maxPrice,
+      createdById: queryParams.createdById,
+      orderBy: queryParams.orderBy || orderBy.Desc,
+      sortBy: queryParams.sortBy || sortBy.CreatedAt
+    },
+    isUndefined
+  )
   const { data } = useQuery({
-    queryKey: ['products', queryParams],
+    queryKey: ['products', queryConfig],
     queryFn: () => {
-      return productApi.getProducts(queryParams)
-    }
+      return productApi.getProducts(queryConfig as ProductListConfig)
+    },
+    keepPreviousData: true
   })
+  // console.log(queryConfig)
+  console.log(data?.data.data)
   return (
     <div>
       <div className='my-5'>
-        <Carousel className='w-3/4 mx-auto' autoplay={{ dotDuration: true }} autoplaySpeed={3000} arrows>
+        <Carousel className='mx-auto w-3/4' autoplay={{ dotDuration: true }} autoplaySpeed={3000} arrows>
           <div>
             <img width='100%' src='https://cf.shopee.vn/file/sg-11134258-7rfgt-m9ju2anplprdb9_xxhdpi' alt='' />
           </div>
@@ -50,23 +72,32 @@ export default function ProductList() {
               <AsideFilter />
             </div>
             <div className='col-span-9'>
-              <SortProductList />
-              <div className='mt-6 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'>
-                {data &&
-                  data.data.data.map((product) => (
-                    <div key={product.id} className='col-span-1'>
-                      <Product product={product} />
-                    </div>
-                  ))}
-              </div>
-              <Pagination
-                page={page}
-                setPage={setPage}
-                totalPage={totalPage}
-                setTotalPage={setTotalPage}
-                pageSize={pageSize}
-                setPageSize={setPageSize}
-              />
+              {data ? (
+                <>
+                  <SortProductList
+                    queryConfig={queryConfig}
+                    totalPages={data.data.totalPages}
+                    totalItems={data.data.totalItems}
+                  />
+
+                  <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+                    {data.data.data.map((product) => (
+                      <div key={product.id} className='col-span-1'>
+                        <Product product={product} />
+                      </div>
+                    ))}
+                  </div>
+                  <Pagination
+                    queryConfig={queryConfig}
+                    totalPages={data.data.totalPages}
+                    totalItems={data.data.totalItems}
+                  />
+                </>
+              ) : (
+                <div className='mt-6 flex items-center justify-center'>
+                  <Spin size='large' />
+                </div>
+              )}
             </div>
           </div>
         </div>
