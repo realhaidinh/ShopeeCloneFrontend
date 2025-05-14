@@ -32,7 +32,7 @@ export default function useRouteElements() {
       )
     },
     {
-      path: '/products/:id',
+      path: '/products/:nameId',
       index: true,
       element: (
         <MainLayout>

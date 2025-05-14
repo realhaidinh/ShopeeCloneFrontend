@@ -66,7 +66,7 @@ export default function AsideFilter({ queryConfig, categoryData, parentCategoryD
     event.preventDefault()
 
     // Kiểm tra nếu maxPrice > 0 và minPrice >= maxPrice
-    if (maxPrice > 0 && minPrice >= maxPrice) {
+    if ((maxPrice > 0 && minPrice >= maxPrice) || (minPrice > 0 && maxPrice <= minPrice)) {
       message.error('Giá tối thiểu không được lớn hơn hoặc bằng giá tối đa')
       return
     }

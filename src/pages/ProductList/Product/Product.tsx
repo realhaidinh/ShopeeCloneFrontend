@@ -1,13 +1,13 @@
 import { Avatar, Card, Rate } from 'antd'
 import { Link } from 'react-router-dom'
 import { Product as ProductType } from 'src/types/product.type'
-import { formatCurrency, formatNumberToSocialStyle } from 'src/utils/utils'
+import { formatCurrency, formatNumberToSocialStyle, generateNameId } from 'src/utils/utils'
 interface Props {
   product: ProductType
 }
 export default function Product({ product }: Props) {
   return (
-    <Link to={`/products/${product.id}`}>
+    <Link to={`/products/${generateNameId({ name: product.name, id: String(product.id) })}`}>
       <div className='h-full w-full overflow-hidden rounded-sm border-orange/70 bg-white shadow transition-transform duration-100 hover:translate-y-[-0.1rem] hover:border-[2px] hover:shadow-md'>
         <div className='relative w-full pt-[100%]'>
           <img
