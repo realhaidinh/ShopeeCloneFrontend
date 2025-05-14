@@ -1,12 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, InputNumber, Rate } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
-import { Product } from 'src/types/product.type'
 import { formatCurrency, formatNumberToSocialStyle, rateSale } from 'src/utils/utils'
-import { string } from 'yup'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -29,7 +27,7 @@ export default function ProductDetail() {
 
   const currentImages = useMemo(
     () => (product ? productImages.slice(...currentIndexImages) : []),
-    [product, currentIndexImages]
+    [product, currentIndexImages, productImages]
   )
 
   useEffect(() => {
@@ -39,7 +37,6 @@ export default function ProductDetail() {
   }, [product])
 
   const next = () => {
-    console.log(currentIndexImages[1])
     if (currentIndexImages[1] < productImages.length) {
       setCurrentIndexImages((prev) => [prev[0] + 1, prev[1] + 1])
     }
@@ -55,17 +52,48 @@ export default function ProductDetail() {
     setActiveImage(img)
   }
 
+  const imageRef = useRef<HTMLImageElement>(null)
+
+  const handleZoom = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const image = imageRef.current as HTMLImageElement
+    const { naturalHeight, naturalWidth } = image
+    // Cách 1: Lấy offsetX, offsetY đơn giản khi chúng ta đã xử lý được bubble event
+    // const { offsetX, offsetY } = event.nativeEvent
+
+    // Cách 2: Lấy offsetX, offsetY khi chúng ta không xử lý được bubble event
+    const offsetX = event.pageX - (rect.x + window.scrollX)
+    const offsetY = event.pageY - (rect.y + window.scrollY)
+
+    const top = offsetY * (1 - naturalHeight / rect.height)
+    const left = offsetX * (1 - naturalWidth / rect.width)
+    image.style.width = naturalWidth + 'px'
+    image.style.height = naturalHeight + 'px'
+    image.style.maxWidth = 'unset'
+    image.style.top = top + 'px'
+    image.style.left = left + 'px'
+  }
+
+  const handleRemoveZoom = () => {
+    imageRef.current?.removeAttribute('style')
+  }
+
   return product ? (
     <div className='bg-gray-200 py-6'>
       <div className='container'>
         <div className='bg-white p-4 shadow'>
           <div className='grid grid-cols-12 gap-9'>
             <div className='col-span-5'>
-              <div className='relative w-full pt-[100%] shadow'>
+              <div
+                className='relative w-full cursor-zoom-in overflow-hidden pt-[100%] shadow'
+                onMouseMove={handleZoom}
+                onMouseLeave={handleRemoveZoom}
+              >
                 <img
                   src={activeImage}
                   alt={product.data.name}
                   className='absolute top-0 left-0 h-full w-full bg-white object-cover'
+                  ref={imageRef}
                 />
               </div>
               <div className='relative mt-4 grid grid-cols-5 gap-1'>
