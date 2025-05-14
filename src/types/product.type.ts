@@ -150,7 +150,7 @@ export interface ProductListConfig {
   page?: number | string // default: 1
   limit?: number | string // default: 10
   name?: string
-  brandIds?: number[]
+  brandIds?: string[]
   categories?: number[]
   minPrice?: number | string
   maxPrice?: number | string
