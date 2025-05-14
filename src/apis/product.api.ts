@@ -10,7 +10,7 @@ const productApi = {
     })
   },
   getProductDetail(id: string) {
-    return http.get<Product | NotFoundApi>(`${URL}/${id}`)
+    return http.get<Product>(`${URL}/${id}`)
   }
 }
 

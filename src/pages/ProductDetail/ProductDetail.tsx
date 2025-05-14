@@ -1,0 +1,210 @@
+import { useQuery } from '@tanstack/react-query'
+import { Alert, InputNumber, Rate } from 'antd'
+import { useEffect, useMemo, useState } from 'react'
+
+import { useParams } from 'react-router-dom'
+import productApi from 'src/apis/product.api'
+import { Product } from 'src/types/product.type'
+import { formatCurrency, formatNumberToSocialStyle, rateSale } from 'src/utils/utils'
+import { string } from 'yup'
+
+export default function ProductDetail() {
+  const { id } = useParams()
+  const { data: productDetailData } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => productApi.getProductDetail(id as string)
+  })
+  const product = productDetailData
+  const productImages: string[] = []
+  if (productDetailData?.data) {
+    productImages.push(...productDetailData.data.images)
+    productDetailData.data.skus.forEach((sku) => {
+      if (sku.image) productImages.push(sku.image)
+    })
+  }
+
+  //Hiển thị 1 lần 5 ảnh
+  const [currentIndexImages, setCurrentIndexImages] = useState([0, 5])
+  const [activeImage, setActiveImage] = useState('')
+
+  const currentImages = useMemo(
+    () => (product ? productImages.slice(...currentIndexImages) : []),
+    [product, currentIndexImages]
+  )
+
+  useEffect(() => {
+    if (product && productImages.length > 0) {
+      setActiveImage(productImages[0])
+    }
+  }, [product])
+
+  const next = () => {
+    console.log(currentIndexImages[1])
+    if (currentIndexImages[1] < productImages.length) {
+      setCurrentIndexImages((prev) => [prev[0] + 1, prev[1] + 1])
+    }
+  }
+
+  const prev = () => {
+    if (currentIndexImages[0] > 0) {
+      setCurrentIndexImages((prev) => [prev[0] - 1, prev[1] - 1])
+    }
+  }
+
+  const chooseActive = (img: string) => {
+    setActiveImage(img)
+  }
+
+  return product ? (
+    <div className='bg-gray-200 py-6'>
+      <div className='container'>
+        <div className='bg-white p-4 shadow'>
+          <div className='grid grid-cols-12 gap-9'>
+            <div className='col-span-5'>
+              <div className='relative w-full pt-[100%] shadow'>
+                <img
+                  src={activeImage}
+                  alt={product.data.name}
+                  className='absolute top-0 left-0 h-full w-full bg-white object-cover'
+                />
+              </div>
+              <div className='relative mt-4 grid grid-cols-5 gap-1'>
+                <button
+                  onClick={prev}
+                  className='absolute left-0 top-1/2 z-10 h-9 w-5 -translate-y-1/2 bg-black/20 text-white'
+                >
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='h-5 w-5'
+                  >
+                    <path strokeLinecap='round' strokeLinejoin='round' d='M15.75 19.5L8.25 12l7.5-7.5' />
+                  </svg>
+                </button>
+                {currentImages.map((img) => {
+                  const isActive = img === activeImage
+                  return (
+                    <div className='relative w-full pt-[100%]' key={img} onMouseEnter={() => chooseActive(img)}>
+                      <img
+                        src={img}
+                        alt={product.data.name}
+                        className='absolute top-0 left-0 h-full w-full cursor-pointer bg-white object-cover'
+                      />
+                      {isActive && <div className='absolute inset-0 border-2 border-orange' />}
+                    </div>
+                  )
+                })}
+                <button
+                  onClick={next}
+                  className='absolute right-0 top-1/2 z-10 h-9 w-5 -translate-y-1/2 bg-black/20 text-white'
+                >
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='h-5 w-5'
+                  >
+                    <path strokeLinecap='round' strokeLinejoin='round' d='M8.25 4.5l7.5 7.5-7.5 7.5' />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className='col-span-7'>
+              <h1 className='text-xl font-medium uppercase'>
+                {product.data.productTranslations[0]?.name || 'Product Name'}
+              </h1>
+              <div className='mt-8 flex items-center'>
+                <div className='flex items-center'>
+                  <span className='mr-1 border-b border-b-orange text-orange'>{4.7}</span>
+                  <Rate style={{ fontSize: '0.75rem' }} allowHalf disabled defaultValue={4.7} />
+                </div>
+                <div className='mx-4 h-4 w-[1px] bg-gray-300'></div>
+                <div>
+                  <span>
+                    {formatNumberToSocialStyle(
+                      product.data.productSKUSnapshots?.reduce((prev, next) => prev + next.quantity, 0) || 0
+                    )}
+                  </span>
+                  <span className='ml-1 text-gray-500'>Đã bán</span>
+                </div>
+              </div>
+
+              <div className='mt-8 flex items-center bg-gray-50 px-5 py-4'>
+                <div className='text-gray-500 line-through'>₫{formatCurrency(product.data.virtualPrice)}</div>
+                <div className='ml-3 text-3xl font-medium text-orange'>₫{formatCurrency(product.data.basePrice)}</div>
+                <div className='ml-4 rounded-sm bg-orange px-1 py-[2px] text-xs font-semibold uppercase text-white'>
+                  {rateSale(product.data.virtualPrice, product.data.basePrice)} giảm
+                </div>
+              </div>
+
+              <div className='mt-8 flex items-center'>
+                <div className='capitalize text-gray-500'>Số lượng</div>
+                <div className='ml-10 flex items-center'>
+                  <InputNumber min={1} value={1} size='large' />
+                </div>
+                <div className='ml-6 text-sm text-gray-500'>
+                  {product.data.skus.reduce((prev, next) => prev + next.stock, 0)} sản phẩm có sẵn
+                </div>
+              </div>
+
+              <div className='mt-8 flex items-center'>
+                <button className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'>
+                  <svg
+                    enableBackground='new 0 0 15 15'
+                    viewBox='0 0 15 15'
+                    x={0}
+                    y={0}
+                    className='mr-[10px] h-5 w-5 fill-current stroke-orange text-orange'
+                  >
+                    <g>
+                      <g>
+                        <polyline
+                          fill='none'
+                          points='.5 .5 2.7 .5 5.2 11 12.4 11 14.5 3.5 3.7 3.5'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeMiterlimit={10}
+                        />
+                        <circle cx={6} cy='13.5' r={1} stroke='none' />
+                        <circle cx='11.5' cy='13.5' r={1} stroke='none' />
+                      </g>
+                      <line fill='none' strokeLinecap='round' strokeMiterlimit={10} x1='7.5' x2='10.5' y1={7} y2={7} />
+                      <line fill='none' strokeLinecap='round' strokeMiterlimit={10} x1={9} x2={9} y1='8.5' y2='5.5' />
+                    </g>
+                  </svg>
+                  Thêm vào giỏ hàng
+                </button>
+                <button className='fkex ml-4 h-12 min-w-[5rem] items-center justify-center rounded-sm bg-orange px-5 capitalize text-white shadow-sm outline-none hover:bg-orange/90'>
+                  Mua ngay
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className='container'>
+        <div className='mt-8 bg-white p-4 shadow'>
+          <div className='rounded bg-gray-50 p-4 text-lg capitalize text-slate-700'>Mô tả sản phẩm</div>
+
+          <div className='mx-4 mt-6 mb-4 text-sm leading-loose'>
+            {product.data.productTranslations[0]?.description || 'Description'}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className='container flex min-h-[300px] items-center justify-center'>
+      <Alert
+        message='Error'
+        description='Lỗi hiển thị sản phẩm, có thể do sản phẩm bị xoá hoặc không tồn tại trong hệ thống!'
+        type='error'
+        showIcon
+      />
+    </div>
+  )
+}
