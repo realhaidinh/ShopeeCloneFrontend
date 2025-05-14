@@ -10,14 +10,15 @@ interface Props {
   queryConfig: QueryConfig
   totalPages: number
   totalItems: number
+  categoryParentId: string | undefined
 }
-export default function SortProductList({ queryConfig, totalPages, totalItems }: Props) {
+export default function SortProductList({ queryConfig, totalPages, totalItems, categoryParentId }: Props) {
   const navigate = useNavigate()
   const { sortBy, orderBy } = queryConfig
 
   const handleSort = (sortByValue: Exclude<ProductListConfig['sortBy'], undefined>) => {
     navigate({
-      pathname: '/',
+      pathname: `/categories/${categoryParentId}`,
       search: createSearchParams(
         omit(
           {
@@ -32,7 +33,7 @@ export default function SortProductList({ queryConfig, totalPages, totalItems }:
   const handlePriceOrder = (value: Exclude<ProductListConfig['orderBy'], undefined>) => {
     console.log(value)
     navigate({
-      pathname: '/',
+      pathname: `/categories/${categoryParentId}`,
       search: createSearchParams({
         ...queryConfig,
         sortBy: 'price',
