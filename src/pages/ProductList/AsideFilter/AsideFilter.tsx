@@ -9,6 +9,7 @@ import brandApi from 'src/apis/brand.api'
 import { Brand } from 'src/types/brand.type'
 import { omit, omitBy } from 'lodash'
 import { QueryConfig } from 'src/hooks/useQueryConfig'
+import { useQuery } from '@tanstack/react-query'
 
 interface Props {
   queryConfig: QueryConfig
@@ -22,20 +23,22 @@ export default function AsideFilter({ queryConfig, categoryData, parentCategoryD
   const navigate = useNavigate()
   const [minPrice, setMinPrice] = useState(Number(queryConfig.minPrice) || 0)
   const [maxPrice, setMaxPrice] = useState(Number(queryConfig.maxPrice) || 0)
-  const [brands, setBrands] = useState<Brand[]>([])
   const [selectedBrands, setSelectedBrands] = useState<string[]>((brandIds as string[]) || [])
-  useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        const data = await brandApi.getBrands()
-        setBrands(data.data.data)
-      } catch (error) {
-        toast.error('Không thể tải danh sách thương hiệu')
-      }
-    }
+  const {
+    data: brandsData,
+    isLoading: brandsLoading,
+    error
+  } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandApi.getBrands(),
+    staleTime: 2 * 60 * 1000 // 5 phút, tùy bạn
+  })
 
-    fetchBrands()
-  }, []) // chỉ chạy 1 lần khi component mount
+  const brands = brandsData?.data.data ?? []
+
+  useEffect(() => {
+    if (error) toast.error('Không thể tải danh sách thương hiệu')
+  }, [error])
   // console.log(queryConfig)
   // console.log(categoryParentId)
   // console.log(brands)

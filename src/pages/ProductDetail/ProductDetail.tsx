@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
+import Product from 'src/pages/ProductList/Product'
+import { ProductListConfig } from 'src/types/product.type'
 import { formatCurrency, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
 
 export default function ProductDetail() {
@@ -11,7 +13,8 @@ export default function ProductDetail() {
   const id = getIdFromNameId(nameId as string)
   const { data: productDetailData } = useQuery({
     queryKey: ['product', id],
-    queryFn: () => productApi.getProductDetail(id as string)
+    queryFn: () => productApi.getProductDetail(id as string),
+    staleTime: 3 * 60 * 1000
   })
   const product = productDetailData
   const productImages: string[] = []
@@ -54,6 +57,20 @@ export default function ProductDetail() {
   }
 
   const imageRef = useRef<HTMLImageElement>(null)
+
+  const queryConfig: ProductListConfig = {
+    limit: '20',
+    page: '1',
+    categories: product?.data.categories.map((item) => item.id)
+  }
+  const { data: productData } = useQuery({
+    queryKey: ['products', queryConfig],
+    queryFn: () => {
+      return productApi.getProducts(queryConfig)
+    },
+    enabled: Boolean(product),
+    staleTime: 3 * 60 * 1000
+  })
 
   const handleZoom = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -216,13 +233,31 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-      <div className='container'>
-        <div className='mt-8 bg-white p-4 shadow'>
-          <div className='rounded bg-gray-50 p-4 text-lg capitalize text-slate-700'>Mô tả sản phẩm</div>
 
-          <div className='mx-4 mt-6 mb-4 text-sm leading-loose'>
-            {product.data.productTranslations[0]?.description || 'Description'}
+      <div className='mt-8'>
+        <div className='container'>
+          <div className='mt-8 bg-white p-4 shadow'>
+            <div className='rounded bg-gray-50 p-4 text-lg capitalize text-slate-700'>Mô tả sản phẩm</div>
+
+            <div className='mx-4 mt-6 mb-4 text-sm leading-loose'>
+              {product.data.productTranslations[0]?.description || 'Description'}
+            </div>
           </div>
+        </div>
+      </div>
+
+      <div className='mt-8'>
+        <div className='container'>
+          <div className='uppercase text-gray-400'>Sản phẩm liên quan</div>
+          {productData && (
+            <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-4  lg:grid-cols-5 xl:grid-cols-6'>
+              {productData.data.data.map((product) => (
+                <div key={product.id} className='col-span-1'>
+                  <Product product={product} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -7,7 +7,8 @@ import { Category as CategoryType } from 'src/types/category.type'
 export default function Category() {
   const { data, isLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: categoryApi.getCategories
+    queryFn: categoryApi.getCategories,
+    staleTime: 2 * 60 * 1000
   })
 
   const categories = data?.data.data || []

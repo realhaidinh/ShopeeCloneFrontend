@@ -39,7 +39,6 @@ export default function SortProductList({ queryConfig, totalPages, totalItems, c
     })
   }
   const handlePriceOrder = (value: Exclude<ProductListConfig['orderBy'], undefined>) => {
-    console.log(value)
     navigate({
       pathname: `${categoryParentId ? `/categories/${categoryParentId}` : '/search'}`,
       search: createSearchParams({

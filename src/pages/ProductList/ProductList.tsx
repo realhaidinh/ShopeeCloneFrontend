@@ -18,18 +18,22 @@ export default function ProductList() {
     queryFn: () => {
       return productApi.getProducts(queryConfig as ProductListConfig)
     },
-    keepPreviousData: true
+    keepPreviousData: true,
+    staleTime: 3 * 60 * 1000
   })
   const { data: categoryData } = useQuery({
     queryKey: ['categories', categoryParentId],
     queryFn: () => categoryApi.getChildrenCategories(Number(categoryParentId)),
-    enabled: !!categoryParentId // tránh gọi khi null
+    enabled: !!categoryParentId, // tránh gọi khi null
+    staleTime: 2 * 60 * 1000
   })
 
   const { data: parentCategoryData } = useQuery({
     queryKey: ['parentCategories', categoryParentId],
     queryFn: () => categoryApi.getDetailCategory(Number(categoryParentId)),
-    enabled: !!categoryParentId // tránh gọi khi null
+    enabled: !!categoryParentId, // tránh gọi khi null
+    staleTime: 2 * 60 * 1000
+    // staleTime: Infinity,
   })
   return (
     <div>
