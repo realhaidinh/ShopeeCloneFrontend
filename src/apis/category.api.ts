@@ -7,9 +7,11 @@ const categoryApi = {
     return http.get<CategoryListResponse>(URL)
   },
   getChildrenCategories: (parentCategoryId: number) => {
+    if (!parentCategoryId) return
     return http.get<CategoryListResponse>(`${URL}?parentCategoryId=${parentCategoryId}`)
   },
   getDetailCategory: (id: number) => {
+    if (!id) return
     return http.get<Category>(`${URL}/${id}`)
   }
 }

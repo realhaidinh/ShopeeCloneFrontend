@@ -1,40 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { Carousel, Empty, Spin } from 'antd'
-import { useState } from 'react'
-import { omitBy, isUndefined } from 'lodash'
+import { Empty, Spin } from 'antd'
 import productApi from 'src/apis/product.api'
 import Pagination from 'src/components/Pagination'
-import useQueryParams from 'src/hooks/useQueryParams'
 import AsideFilter from 'src/pages/ProductList/AsideFilter'
 import Product from 'src/pages/ProductList/Product/Product'
 import SortProductList from 'src/pages/ProductList/SortProductList'
 import { ProductListConfig } from 'src/types/product.type'
-import { orderBy, sortBy } from 'src/constants/product'
 import { useParams } from 'react-router-dom'
 import categoryApi from 'src/apis/category.api'
-
-export type QueryConfig = {
-  [key in keyof ProductListConfig]: string | string[]
-}
+import useQueryConfig from 'src/hooks/useQueryConfig'
 
 export default function ProductList() {
-  const queryParams: QueryConfig = useQueryParams()
   const { categoryParentId } = useParams<{ categoryParentId: string }>()
-  const queryConfig: QueryConfig = omitBy(
-    {
-      page: queryParams.page || '1',
-      limit: queryParams.limit || '10',
-      name: queryParams.name,
-      brandIds: queryParams.brandIds,
-      categories: queryParams.categories || categoryParentId,
-      minPrice: queryParams.minPrice,
-      maxPrice: queryParams.maxPrice,
-      createdById: queryParams.createdById,
-      orderBy: queryParams.orderBy || orderBy.Desc,
-      sortBy: queryParams.sortBy || sortBy.CreatedAt
-    },
-    isUndefined
-  )
+  const queryConfig = useQueryConfig()
   const { data: productData } = useQuery({
     queryKey: ['products', queryConfig],
     queryFn: () => {
@@ -44,15 +22,14 @@ export default function ProductList() {
   })
   const { data: categoryData } = useQuery({
     queryKey: ['categories', categoryParentId],
-    queryFn: () => {
-      return categoryApi.getChildrenCategories(Number(categoryParentId))
-    }
+    queryFn: () => categoryApi.getChildrenCategories(Number(categoryParentId)),
+    enabled: !!categoryParentId // tránh gọi khi null
   })
+
   const { data: parentCategoryData } = useQuery({
     queryKey: ['parentCategories', categoryParentId],
-    queryFn: () => {
-      return categoryApi.getDetailCategory(Number(categoryParentId))
-    }
+    queryFn: () => categoryApi.getDetailCategory(Number(categoryParentId)),
+    enabled: !!categoryParentId // tránh gọi khi null
   })
   return (
     <div>
@@ -63,15 +40,20 @@ export default function ProductList() {
               <AsideFilter
                 queryConfig={queryConfig}
                 categoryData={categoryData?.data.data || []}
-                parentCategoryData={parentCategoryData?.data}
+                parentCategoryData={parentCategoryData?.data || undefined}
               />
             </div>
             <div className='col-span-9'>
+              {queryConfig.name && (
+                <h1 className='text-md my-3 font-medium uppercase text-gray-600'>
+                  Kết quả tìm kiếm cho từ khoá: {queryConfig.name}
+                </h1>
+              )}
               {productData ? (
                 <>
                   <SortProductList
                     queryConfig={queryConfig}
-                    categoryParentId={categoryParentId}
+                    categoryParentId={categoryParentId || undefined}
                     totalPages={productData.data.totalPages}
                     totalItems={productData.data.totalItems}
                   />

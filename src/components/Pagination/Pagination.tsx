@@ -1,7 +1,7 @@
 import type { PaginationProps } from 'antd'
 import { Pagination as PaginationAntd } from 'antd'
 import { useNavigate, createSearchParams, useParams } from 'react-router-dom'
-import { QueryConfig } from 'src/pages/ProductList/ProductList'
+import { QueryConfig } from 'src/hooks/useQueryConfig'
 
 interface Props {
   queryConfig: QueryConfig
@@ -16,7 +16,7 @@ export default function Pagination({ queryConfig, totalPages, totalItems }: Prop
   const navigate = useNavigate()
   const onChange: PaginationProps['onChange'] = (pageNumber) => {
     navigate({
-      pathname: `/categories/${categoryParentId}`,
+      pathname: `${categoryParentId ? `/categories/${categoryParentId}` : '/search'}`,
       search: createSearchParams({
         ...queryConfig,
         page: pageNumber.toString()

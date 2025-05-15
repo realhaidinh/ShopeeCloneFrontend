@@ -50,6 +50,15 @@ export default function useRouteElements() {
       )
     },
     {
+      path: '/search',
+      index: true,
+      element: (
+        <MainLayout>
+          <ProductList />
+        </MainLayout>
+      )
+    },
+    {
       path: '',
       element: <ProtectedRoute />,
       children: [

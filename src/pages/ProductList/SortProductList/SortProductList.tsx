@@ -1,10 +1,10 @@
 import { Select, Pagination } from 'antd'
 import './index.css'
-import { QueryConfig } from 'src/pages/ProductList/ProductList'
 import { createSearchParams, useNavigate } from 'react-router-dom'
 import { ProductListConfig } from 'src/types/product.type'
 import { omit } from 'lodash'
 import { OrderBy } from 'src/constants/product'
+import { QueryConfig } from 'src/hooks/useQueryConfig'
 
 interface Props {
   queryConfig: QueryConfig
@@ -17,23 +17,31 @@ export default function SortProductList({ queryConfig, totalPages, totalItems, c
   const { sortBy, orderBy } = queryConfig
 
   const handleSort = (sortByValue: Exclude<ProductListConfig['sortBy'], undefined>) => {
-    navigate({
-      pathname: `/categories/${categoryParentId}`,
-      search: createSearchParams(
-        omit(
+    const config = categoryParentId
+      ? omit(
           {
             ...queryConfig,
             sortBy: sortByValue
           },
           ['orderBy']
         )
-      ).toString()
+      : omit(
+          {
+            ...queryConfig,
+            sortBy: sortByValue
+          },
+          ['orderBy', 'categories']
+        )
+
+    navigate({
+      pathname: `${categoryParentId ? `/categories/${categoryParentId}` : '/search'}`,
+      search: createSearchParams(config).toString()
     })
   }
   const handlePriceOrder = (value: Exclude<ProductListConfig['orderBy'], undefined>) => {
     console.log(value)
     navigate({
-      pathname: `/categories/${categoryParentId}`,
+      pathname: `${categoryParentId ? `/categories/${categoryParentId}` : '/search'}`,
       search: createSearchParams({
         ...queryConfig,
         sortBy: 'price',

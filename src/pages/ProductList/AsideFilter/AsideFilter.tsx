@@ -2,13 +2,13 @@ import { createSearchParams, Link, useNavigate, useParams } from 'react-router-d
 import { UnorderedListOutlined, CaretRightOutlined, FilterOutlined } from '@ant-design/icons'
 import type { InputNumberProps, SliderSingleProps } from 'antd'
 import { InputNumber, Slider, Space, Rate, Select, message } from 'antd'
-import { QueryConfig } from 'src/pages/ProductList/ProductList'
 import { Category } from 'src/types/category.type'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import brandApi from 'src/apis/brand.api'
 import { Brand } from 'src/types/brand.type'
 import { omit, omitBy } from 'lodash'
+import { QueryConfig } from 'src/hooks/useQueryConfig'
 
 interface Props {
   queryConfig: QueryConfig
@@ -87,7 +87,7 @@ export default function AsideFilter({ queryConfig, categoryData, parentCategoryD
     }
 
     navigate({
-      pathname: `/categories/${categoryParentId}`,
+      pathname: `${categoryParentId ? `/categories/${categoryParentId}` : '/search'}`,
       search: createSearchParams(query).toString()
     })
   }
@@ -97,63 +97,67 @@ export default function AsideFilter({ queryConfig, categoryData, parentCategoryD
     setSelectedBrands([])
     navigate({
       pathname: `/categories/${categoryParentId}`,
-      search: createSearchParams(omit(queryConfig, ['minPrice', 'maxPrice', 'brandIds'])).toString()
+      search: createSearchParams(omit(queryConfig, ['minPrice', 'maxPrice', 'brandIds', 'categories'])).toString()
     })
   }
   return (
     <div className='py-4'>
-      <Link to='/all-categories' className='flex items-center gap-3 font-bold'>
-        <UnorderedListOutlined />
-        Tất Cả Danh Mục
-      </Link>
-      <div className='my-4 h-[1px] bg-gray-300'></div>
-      <ul>
-        <li className='py-2 pl-2'>
-          <Link
-            to={{
-              pathname: `/categories/${categoryParentId}`,
-              search: createSearchParams({
-                ...queryConfig,
-                categories: ''
-              }).toString()
-            }}
-            className={`relative px-2 ${
-              categoryParentId && categories === categoryParentId ? 'font-semibold text-orange' : ''
-            }`}
-          >
-            {categoryParentId && categories === categoryParentId && (
-              <div className='absolute top-0 left-[-10px]'>
-                <CaretRightOutlined style={{ color: '#ee4d2d', fontSize: '12px' }} />
-              </div>
-            )}
-            {parentCategoryData?.categoryTranslations[0]?.name || 'Category name null'}
-          </Link>
-        </li>
-        {categoryData.map((category) => {
-          const isActive = Number(categories) === category.id
-          return (
-            <li key={category.id} className={` py-2 pl-2 `}>
+      {categoryParentId && (
+        <>
+          <ul>
+            <Link to='/all-categories' className='flex items-center gap-3 font-bold'>
+              <UnorderedListOutlined />
+              Tất Cả Danh Mục
+            </Link>
+            <div className='my-4 h-[1px] bg-gray-300'></div>
+            <li className='py-2 pl-2'>
               <Link
                 to={{
                   pathname: `/categories/${categoryParentId}`,
                   search: createSearchParams({
                     ...queryConfig,
-                    categories: String(category.id)
+                    categories: ''
                   }).toString()
                 }}
-                className={`relative px-2 ${isActive ? 'font-semibold text-orange' : ''}`}
+                className={`relative px-2 ${
+                  categoryParentId && categories === categoryParentId ? 'font-semibold text-orange' : ''
+                }`}
               >
-                {isActive && (
+                {categoryParentId && categories === categoryParentId && (
                   <div className='absolute top-0 left-[-10px]'>
                     <CaretRightOutlined style={{ color: '#ee4d2d', fontSize: '12px' }} />
                   </div>
                 )}
-                {category.categoryTranslations[0]?.name || 'Category name null'}
+                {parentCategoryData?.categoryTranslations[0]?.name || 'Category name null'}
               </Link>
             </li>
-          )
-        })}
-      </ul>
+            {categoryData.map((category) => {
+              const isActive = Number(categories) === category.id
+              return (
+                <li key={category.id} className={` py-2 pl-2 `}>
+                  <Link
+                    to={{
+                      pathname: `/categories/${categoryParentId}`,
+                      search: createSearchParams({
+                        ...queryConfig,
+                        categories: String(category.id)
+                      }).toString()
+                    }}
+                    className={`relative px-2 ${isActive ? 'font-semibold text-orange' : ''}`}
+                  >
+                    {isActive && (
+                      <div className='absolute top-0 left-[-10px]'>
+                        <CaretRightOutlined style={{ color: '#ee4d2d', fontSize: '12px' }} />
+                      </div>
+                    )}
+                    {category.categoryTranslations[0]?.name || 'Category name null'}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
       {/* Khoảng giá */}
       <Link to='/all-categories' className='mt-4 flex items-center gap-3 font-bold uppercase'>
         <FilterOutlined />

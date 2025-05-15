@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Select, Dropdown, Space, Button, Popover, Badge } from 'antd'
+import { createSearchParams, Link, useNavigate, useParams } from 'react-router-dom'
+import { Select, Dropdown, Space, Button, Popover, Badge, message } from 'antd'
 import type { MenuProps } from 'antd'
 import { DownOutlined, UserOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
@@ -8,8 +8,13 @@ import authApi from 'src/apis/auth.api'
 import { AppContext } from 'src/contexts/app.context'
 import { getRefreshTokenFromLS } from 'src/utils/auth'
 import { toast } from 'react-toastify'
+import useQueryConfig from 'src/hooks/useQueryConfig'
+import { omit } from 'lodash'
 
 export default function Header() {
+  const { categoryParentId } = useParams<{ categoryParentId: string }>()
+  const queryConfig = useQueryConfig()
+  const [keyword, setKeyword] = useState<string>('')
   const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
   const logoutMutation = useMutation({
     mutationFn: (body: { refreshToken: string }) => authApi.logout(body),
@@ -47,18 +52,19 @@ export default function Header() {
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen)
   }
+  const navigate = useNavigate()
   const content = (
-    <div className='flex flex-col justify-start mt-3 max-w-[400px] max-h-[300px]'>
+    <div className='mt-3 flex max-h-[300px] max-w-[400px] flex-col justify-start'>
       <div className='overflow-y-scroll scroll-auto'>
         <div className='mt-4 flex'>
           <div className='flex-shrink-0'>
             <img
               src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
               alt='anh'
-              className='w-11 h-11 w-full object-cover'
+              className='h-11 w-11 w-full object-cover'
             />
           </div>
-          <div className='flex-grow ml-2 overflow-hidden'>
+          <div className='ml-2 flex-grow overflow-hidden'>
             <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
             <div>
               <span>Số lượng: </span>
@@ -74,10 +80,10 @@ export default function Header() {
             <img
               src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
               alt='anh'
-              className='w-11 h-11 object-cover'
+              className='h-11 w-11 object-cover'
             />
           </div>
-          <div className='flex-grow ml-2 overflow-hidden'>
+          <div className='ml-2 flex-grow overflow-hidden'>
             <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
             <div>
               <span>Số lượng: </span>
@@ -93,10 +99,10 @@ export default function Header() {
             <img
               src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
               alt='anh'
-              className='w-11 h-11 object-cover'
+              className='h-11 w-11 object-cover'
             />
           </div>
-          <div className='flex-grow ml-2 overflow-hidden'>
+          <div className='ml-2 flex-grow overflow-hidden'>
             <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
             <div>
               <span>Số lượng: </span>
@@ -112,10 +118,10 @@ export default function Header() {
             <img
               src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
               alt='anh'
-              className='w-11 h-11 object-cover'
+              className='h-11 w-11 object-cover'
             />
           </div>
-          <div className='flex-grow ml-2 overflow-hidden'>
+          <div className='ml-2 flex-grow overflow-hidden'>
             <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
             <div>
               <span>Số lượng: </span>
@@ -131,10 +137,10 @@ export default function Header() {
             <img
               src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
               alt='anh'
-              className='w-11 h-11 object-cover'
+              className='h-11 w-11 object-cover'
             />
           </div>
-          <div className='flex-grow ml-2 overflow-hidden'>
+          <div className='ml-2 flex-grow overflow-hidden'>
             <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
             <div>
               <span>Số lượng: </span>
@@ -146,21 +152,47 @@ export default function Header() {
           </div>
         </div>
       </div>
-      <div className='flex min-h-fit mt-6 items-center justify-between'>
-        <div className='capitalize text-xs text-gray-500'>
+      <div className='mt-6 flex min-h-fit items-center justify-between'>
+        <div className='text-xs capitalize text-gray-500'>
           Tổng số lượng sản phẩm: <span className='text-lg'>5</span>
         </div>
-        <button className='capitalize bg-orange hover:bg-opacity-90 px-4 py-2 rounded-sm text-white'>
+        <button className='rounded-sm bg-orange px-4 py-2 capitalize text-white hover:bg-opacity-90'>
           Xem giỏ hàng
         </button>
       </div>
     </div>
   )
+  const onSubmitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!keyword.trim()) {
+      message.info('Vui lòng nhập tên sản phẩm để tìm kiếm')
+      return
+    }
+    const config = queryConfig.orderBy
+      ? omit(
+          {
+            ...queryConfig,
+            name: keyword
+          },
+          ['order', 'sort_by', 'categories']
+        )
+      : omit(
+          {
+            ...queryConfig,
+            name: keyword
+          },
+          ['categories']
+        )
+    navigate({
+      pathname: `/search`,
+      search: createSearchParams(config).toString()
+    })
+  }
   return (
-    <header className='pb-5 pt-2 bg-[linear-gradient(-180deg,#f53d2d,#f63)] text-white text-sm'>
+    <header className='bg-[linear-gradient(-180deg,#f53d2d,#f63)] pb-5 pt-2 text-sm text-white'>
       <div className='container'>
         <div className='flex justify-end'>
-          <div className='flex items-center py-1 cursor-pointer'>
+          <div className='flex cursor-pointer items-center py-1'>
             <span className='mr-2'>Ngôn ngữ</span>
             <Select
               onSelect={(value) => console.log(value)}
@@ -170,21 +202,21 @@ export default function Header() {
             >
               <Option value='vi'>
                 <span className='flex items-center'>
-                  <img src='https://flagcdn.com/w40/vn.png' alt='vn' className='w-6 h-4 mr-2' />
+                  <img src='https://flagcdn.com/w40/vn.png' alt='vn' className='mr-2 h-4 w-6' />
                   Tiếng Việt
                 </span>
               </Option>
               <Option value='en'>
                 <span className='flex items-center'>
-                  <img src='https://flagcdn.com/w40/gb.png' alt='en' className='w-6 h-4 mr-2' />
+                  <img src='https://flagcdn.com/w40/gb.png' alt='en' className='mr-2 h-4 w-6' />
                   English
                 </span>
               </Option>
             </Select>
           </div>
           {isAuthenticated && (
-            <div className='flex items-center py-1 hover:text-gray-300 cursor-pointer ml-6'>
-              <div className='w-6 h-6 mr-1 flex-shrink-0'>
+            <div className='ml-6 flex cursor-pointer items-center py-1 hover:text-gray-300'>
+              <div className='mr-1 h-6 w-6 flex-shrink-0'>
                 <UserOutlined style={{ fontSize: '20px' }} />
               </div>
               <Dropdown menu={{ items }}>
@@ -200,14 +232,14 @@ export default function Header() {
               <Link to='/register' className='mx-3 capitalize hover:text-white/70'>
                 Đăng ký
               </Link>
-              <div className='border-r-[1px] border-r-white/40 h-4' />
+              <div className='h-4 border-r-[1px] border-r-white/40' />
               <Link to='/login' className='mx-3 capitalize hover:text-white/70'>
                 Đăng nhập
               </Link>
             </div>
           )}
         </div>
-        <div className='grid grid-cols-12 gap-4 mt-4 items-center'>
+        <div className='mt-4 grid grid-cols-12 items-center gap-4'>
           <Link to='/' className='col-span-2'>
             <svg viewBox='0 0 192 65' className='h-11 fill-white'>
               <g fillRule='evenodd'>
@@ -215,22 +247,27 @@ export default function Header() {
               </g>
             </svg>
           </Link>
-          <form className='col-span-9'>
-            <div className='bg-white rounded-sm p-1 flex'>
+          <form className='col-span-9' onSubmit={onSubmitSearch}>
+            <div className='flex rounded-sm bg-white p-1'>
               <input
                 type='text'
-                name='search'
-                className='text-black px-3 py-2 flex-grow border-none outline-none bg-transparent'
+                name='name'
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className='flex-grow border-none bg-transparent px-3 py-2 text-black outline-none'
                 placeholder='Free Ship Đơn Từ 0Đ'
               />
-              <button className='rounded-sm py-2 px-6 flex-shrink-0 bg-orange hover:opacity-90'>
+              <button
+                // disabled={!keyword.trim()}
+                className='flex-shrink-0 rounded-sm bg-orange py-2 px-6 hover:opacity-90'
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   fill='none'
                   viewBox='0 0 24 24'
                   strokeWidth={1.5}
                   stroke='currentColor'
-                  className='w-6 h-6'
+                  className='h-6 w-6'
                 >
                   <path
                     strokeLinecap='round'
@@ -259,7 +296,7 @@ export default function Header() {
                     viewBox='0 0 24 24'
                     strokeWidth={1.5}
                     stroke='currentColor'
-                    className='w-8 h-8'
+                    className='h-8 w-8'
                   >
                     <path
                       strokeLinecap='round'

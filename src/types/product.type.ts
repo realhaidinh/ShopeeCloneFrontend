@@ -157,4 +157,5 @@ export interface ProductListConfig {
   createdById?: number | string
   orderBy?: OrderBy // default: OrderBy.Desc
   sortBy?: SortBy // default: SortBy.CreatedAt
+  lang?: string
 }
