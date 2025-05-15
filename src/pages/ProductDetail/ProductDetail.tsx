@@ -1,15 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, InputNumber, Rate } from 'antd'
+import { Rate, Spin } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
+import QuantityController from 'src/components/QuantityController'
 import Product from 'src/pages/ProductList/Product'
 import { ProductListConfig } from 'src/types/product.type'
 import { formatCurrency, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
 
 export default function ProductDetail() {
   const { nameId } = useParams()
+  const [buyCount, setBuyCount] = useState(1)
   const id = getIdFromNameId(nameId as string)
   const { data: productDetailData } = useQuery({
     queryKey: ['product', id],
@@ -94,6 +96,10 @@ export default function ProductDetail() {
 
   const handleRemoveZoom = () => {
     imageRef.current?.removeAttribute('style')
+  }
+
+  const handleBuyCount = (value: number) => {
+    setBuyCount(value)
   }
 
   return product ? (
@@ -191,7 +197,11 @@ export default function ProductDetail() {
               <div className='mt-8 flex items-center'>
                 <div className='capitalize text-gray-500'>Số lượng</div>
                 <div className='ml-10 flex items-center'>
-                  <InputNumber min={1} value={1} size='large' />
+                  <QuantityController
+                    max={product.data.skus.reduce((prev, next) => prev + next.stock, 0)}
+                    setBuyCount={setBuyCount}
+                    value={buyCount}
+                  />
                 </div>
                 <div className='ml-6 text-sm text-gray-500'>
                   {product.data.skus.reduce((prev, next) => prev + next.stock, 0)} sản phẩm có sẵn
@@ -263,12 +273,7 @@ export default function ProductDetail() {
     </div>
   ) : (
     <div className='container flex min-h-[300px] items-center justify-center'>
-      <Alert
-        message='Error'
-        description='Lỗi hiển thị sản phẩm, có thể do sản phẩm bị xoá hoặc không tồn tại trong hệ thống!'
-        type='error'
-        showIcon
-      />
+      <Spin size='large' />
     </div>
   )
 }
