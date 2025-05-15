@@ -1,3 +1,7 @@
+'use client'
+
+import type React from 'react'
+
 import { useQuery } from '@tanstack/react-query'
 import { Rate, Spin } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -6,7 +10,7 @@ import { useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
 import QuantityController from 'src/components/QuantityController'
 import Product from 'src/pages/ProductList/Product'
-import { ProductListConfig } from 'src/types/product.type'
+import type { ProductListConfig } from 'src/types/product.type'
 import { formatCurrency, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
 
 export default function ProductDetail() {
@@ -19,6 +23,15 @@ export default function ProductDetail() {
     staleTime: 3 * 60 * 1000
   })
   const product = productDetailData
+  const [selectedSKU, setSelectedSKU] = useState<any>(null)
+
+  // Set default selected SKU when product data is loaded
+  useEffect(() => {
+    if (product && product.data.skus.length > 0) {
+      setSelectedSKU(product.data.skus[0])
+    }
+  }, [product])
+
   const productImages: string[] = []
   if (productDetailData?.data) {
     productImages.push(...productDetailData.data.images)
@@ -114,7 +127,7 @@ export default function ProductDetail() {
                 onMouseLeave={handleRemoveZoom}
               >
                 <img
-                  src={activeImage}
+                  src={activeImage || '/placeholder.svg'}
                   alt={product.data.name}
                   className='absolute top-0 left-0 h-full w-full bg-white object-cover'
                   ref={imageRef}
@@ -141,7 +154,7 @@ export default function ProductDetail() {
                   return (
                     <div className='relative w-full pt-[100%]' key={img} onMouseEnter={() => chooseActive(img)}>
                       <img
-                        src={img}
+                        src={img || '/placeholder.svg'}
                         alt={product.data.name}
                         className='absolute top-0 left-0 h-full w-full cursor-pointer bg-white object-cover'
                       />
@@ -194,18 +207,38 @@ export default function ProductDetail() {
                 </div>
               </div>
 
+              <div className='mt-8'>
+                <div className='mb-3 font-medium capitalize text-gray-500'>Phân loại:</div>
+                <div className='flex flex-wrap gap-3'>
+                  {product.data.skus.map((sku) => (
+                    <button
+                      key={sku.id}
+                      onClick={() => setSelectedSKU(sku)}
+                      className={`relative rounded-md border px-4 py-2 transition-all ${
+                        selectedSKU?.id === sku.id
+                          ? 'border-orange bg-orange/5 font-medium text-orange'
+                          : 'border-gray-300 text-gray-700 hover:border-orange/50 hover:shadow-sm'
+                      } ${sku.stock === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+                      disabled={sku.stock === 0}
+                    >
+                      {sku.value}
+                      {sku.stock === 0 && <span className='ml-1 text-xs text-gray-500'>(Hết hàng)</span>}
+                      {selectedSKU?.id === sku.id && (
+                        <span className='absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange text-[10px] text-white'>
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className='mt-8 flex items-center'>
                 <div className='capitalize text-gray-500'>Số lượng</div>
                 <div className='ml-10 flex items-center'>
-                  <QuantityController
-                    max={product.data.skus.reduce((prev, next) => prev + next.stock, 0)}
-                    setBuyCount={setBuyCount}
-                    value={buyCount}
-                  />
+                  <QuantityController max={selectedSKU?.stock || 0} setBuyCount={setBuyCount} value={buyCount} />
                 </div>
-                <div className='ml-6 text-sm text-gray-500'>
-                  {product.data.skus.reduce((prev, next) => prev + next.stock, 0)} sản phẩm có sẵn
-                </div>
+                <div className='ml-6 text-sm text-gray-500'>{selectedSKU?.stock || 0} sản phẩm có sẵn</div>
               </div>
 
               <div className='mt-8 flex items-center'>
