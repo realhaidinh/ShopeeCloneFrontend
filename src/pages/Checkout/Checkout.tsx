@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Button, Form, Input, message, Steps, Card, Divider, Avatar, Collapse, List } from 'antd'
+import { Button, Form, Input, message, Steps, Card, Divider, Avatar, Collapse, List, Spin } from 'antd'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircleOutlined, HomeOutlined, ShoppingCartOutlined, UserOutlined } from '@ant-design/icons'
+import {
+  CheckCircleOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+  CopyOutlined,
+  CreditCardOutlined
+} from '@ant-design/icons'
 import purchaseApi from 'src/apis/purchaseApi'
-import { CartItemWithSKU, CheckoutItem, OrderResponse, Receiver, Shop } from 'src/types/purchase.type'
+import type { CartItemWithSKU, CheckoutItem, OrderResponse, Receiver, Shop } from 'src/types/purchase.type'
 import { formatCurrency } from 'src/utils/utils'
 import type { AxiosResponse } from 'axios'
 
@@ -27,6 +33,7 @@ export default function Checkout() {
   const [checkoutData, setCheckoutData] = useState<CheckoutState | null>(null)
   const [orderResponse, setOrderResponse] = useState<OrderResponse | null>(null)
   const [receiverInfo, setReceiverInfo] = useState<Receiver | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
 
   // Create order mutation - Now with proper typing
   const createOrderMutation = useMutation<AxiosResponse<OrderResponse>, Error, CheckoutItem[]>({
@@ -81,6 +88,24 @@ export default function Checkout() {
 
   const { total, savings } = calculateTotal()
 
+  // Generate QR code URL
+  const generateQrCodeUrl = (paymentId: number, amount: number) => {
+    // Ensure amount has no decimal places for the QR code
+    const formattedAmount = Math.round(amount).toString()
+
+    return `https://qr.sepay.vn/img?acc=${import.meta.env.VITE_BANK_ACCOUNT}&bank=${
+      import.meta.env.VITE_BANK_NAME
+    }&amount=${formattedAmount}&des=${import.meta.env.VITE_PAYMENT_PREFIX}${paymentId}`
+  }
+
+  // Copy payment ID to clipboard
+  const copyPaymentId = () => {
+    if (orderResponse) {
+      navigator.clipboard.writeText(`${import.meta.env.VITE_PAYMENT_PREFIX}${orderResponse.paymentId}`)
+      message.success('Đã sao chép mã thanh toán')
+    }
+  }
+
   // Handle form submission
   const handleSubmit = () => {
     if (!receiverInfo) {
@@ -118,6 +143,11 @@ export default function Checkout() {
       })
   }
 
+  // Handle proceed to payment QR
+  const handleProceedToPayment = () => {
+    setCurrentStep(3)
+  }
+
   // Handle back to cart
   const handleBackToCart = () => {
     navigate('/cart')
@@ -126,6 +156,11 @@ export default function Checkout() {
   // Handle back to information
   const handleBackToInfo = () => {
     setCurrentStep(0)
+  }
+
+  // Handle back to order success
+  const handleBackToOrderSuccess = () => {
+    setCurrentStep(2)
   }
 
   // Handle continue shopping after order
@@ -180,8 +215,12 @@ export default function Checkout() {
                 icon: <ShoppingCartOutlined />
               },
               {
-                title: 'Hoàn tất',
+                title: 'Tạo đơn hàng',
                 icon: <CheckCircleOutlined />
+              },
+              {
+                title: 'Thanh toán',
+                icon: <CreditCardOutlined />
               }
             ]}
           />
@@ -383,9 +422,22 @@ export default function Checkout() {
                 <p>
                   <span className='text-gray-500'>Tổng đơn hàng:</span> {orderResponse.orders.length} đơn
                 </p>
-                <p>
-                  <span className='text-gray-500'>Tổng tiền cần thanh toán: </span>₫{formatCurrency(total)}
-                </p>
+
+                {/* Total for all orders */}
+                <div className='mt-3 border-t border-gray-200 pt-3'>
+                  <div className='mb-1 flex justify-between'>
+                    <span className='text-gray-500'>Tổng tiền hàng:</span>
+                    <span>₫{formatCurrency(total + savings)}</span>
+                  </div>
+                  <div className='mb-1 flex justify-between text-red-500'>
+                    <span className='text-gray-500'>Tổng giảm giá:</span>
+                    <span>-₫{formatCurrency(savings)}</span>
+                  </div>
+                  <div className='flex justify-between font-semibold'>
+                    <span className='text-gray-800'>Tổng thanh toán:</span>
+                    <span className='text-xl text-red-500'>₫{formatCurrency(total)}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Order Information */}
@@ -402,9 +454,12 @@ export default function Checkout() {
                           <span>
                             Đơn hàng #{order.id} - {getShopNameById(order.shopId)}
                           </span>
-                          <span className='text-orange-500 font-medium'>
-                            {order.status === 'PENDING_PAYMENT' ? 'Chờ thanh toán' : order.status}
-                          </span>
+                          <div className='flex items-center gap-3'>
+                            <span className='font-medium text-red-500'>₫{formatCurrency(orderTotal)}</span>
+                            <span className='text-orange-500 font-medium'>
+                              {order.status === 'PENDING_PAYMENT' ? 'Chờ thanh toán' : order.status}
+                            </span>
+                          </div>
                         </div>
                       }
                       key={index}
@@ -499,14 +554,147 @@ export default function Checkout() {
               <Button
                 type='primary'
                 size='large'
-                onClick={handleContinueShopping}
+                onClick={handleProceedToPayment}
                 className='bg-blue-500 hover:bg-blue-600'
               >
+                Thanh toán ngay
+              </Button>
+              <Button size='large' onClick={handleContinueShopping}>
                 Tiếp tục mua sắm
               </Button>
+            </div>
+          </Card>
+        )}
 
-              {/* You can add a button to view order details here */}
-              <Button size='large'>Xem chi tiết đơn hàng</Button>
+        {currentStep === 3 && orderResponse && (
+          <Card className='py-10'>
+            <div className='mb-6 text-center'>
+              <CreditCardOutlined className='mb-4 text-5xl text-blue-500' />
+              <h2 className='mb-2 text-2xl font-bold'>Thanh toán đơn hàng</h2>
+              <p className='text-gray-500'>Quét mã QR bên dưới để thanh toán đơn hàng của bạn</p>
+            </div>
+
+            <div className='mx-auto max-w-3xl'>
+              <div className='grid grid-cols-1 gap-8 md:grid-cols-2'>
+                <div>
+                  <Card title='Thông tin thanh toán' className='mb-4'>
+                    <div className='space-y-4'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-gray-500'>Mã thanh toán:</span>
+                        <div className='flex items-center'>
+                          <span className='mr-2 font-medium'>#{orderResponse.paymentId}</span>
+                          <Button
+                            type='text'
+                            icon={<CopyOutlined />}
+                            size='small'
+                            onClick={copyPaymentId}
+                            className='text-blue-500'
+                          />
+                        </div>
+                      </div>
+
+                      <div className='flex justify-between'>
+                        <span className='text-gray-500'>Tổng đơn hàng:</span>
+                        <span>{orderResponse.orders.length} đơn</span>
+                      </div>
+
+                      <div className='flex justify-between'>
+                        <span className='text-gray-500'>Tổng tiền hàng:</span>
+                        <span>₫{formatCurrency(total + savings)}</span>
+                      </div>
+
+                      <div className='flex justify-between text-red-500'>
+                        <span className='text-gray-500'>Tổng giảm giá:</span>
+                        <span>-₫{formatCurrency(savings)}</span>
+                      </div>
+
+                      <Divider className='my-2' />
+
+                      <div className='flex justify-between text-lg font-bold'>
+                        <span>Tổng thanh toán:</span>
+                        <span className='text-red-500'>₫{formatCurrency(total)}</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card title='Hướng dẫn thanh toán' className='mb-4'>
+                    <div className='space-y-4'>
+                      <div>
+                        <h4 className='mb-1 font-medium'>1. Mở ứng dụng ngân hàng</h4>
+                        <p className='text-sm text-gray-500'>
+                          Mở ứng dụng ngân hàng của bạn và chọn chức năng quét mã QR
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className='mb-1 font-medium'>2. Quét mã QR</h4>
+                        <p className='text-sm text-gray-500'>Quét mã QR hiển thị bên cạnh</p>
+                      </div>
+
+                      <div>
+                        <h4 className='mb-1 font-medium'>3. Kiểm tra thông tin</h4>
+                        <p className='text-sm text-gray-500'>Kiểm tra thông tin người nhận và số tiền thanh toán</p>
+                      </div>
+
+                      <div>
+                        <h4 className='mb-1 font-medium'>4. Nhập nội dung chuyển khoản</h4>
+                        <p className='text-sm text-gray-500'>
+                          Nhập nội dung chuyển khoản:{' '}
+                          <span className='font-medium'>
+                            {import.meta.env.VITE_PAYMENT_PREFIX}
+                            {orderResponse.paymentId}
+                          </span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className='mb-1 font-medium'>5. Xác nhận thanh toán</h4>
+                        <p className='text-sm text-gray-500'>Xác nhận và hoàn tất giao dịch</p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                <div className='flex flex-col items-center'>
+                  <div className='mb-4 w-full max-w-xs rounded-lg bg-white p-4 shadow-md'>
+                    {qrLoading ? (
+                      <div className='mx-auto flex h-64 w-64 items-center justify-center'>
+                        <Spin tip='Đang tải mã QR...' />
+                      </div>
+                    ) : (
+                      <img
+                        src={generateQrCodeUrl(orderResponse.paymentId, total) || '/placeholder.svg'}
+                        alt='Mã QR thanh toán'
+                        className='mx-auto h-64 w-64'
+                        onLoad={() => setQrLoading(false)}
+                        onError={() => {
+                          setQrLoading(false)
+                          message.error('Không thể tải mã QR. Vui lòng thử lại sau.')
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <p className='mb-6 text-center text-sm text-gray-500'>
+                    Quét mã QR để thanh toán số tiền{' '}
+                    <span className='font-medium text-red-500'>₫{formatCurrency(total)}</span>
+                  </p>
+
+                  <div className='w-full rounded-lg border border-yellow-200 bg-yellow-50 p-4'>
+                    <p className='text-sm text-yellow-800'>
+                      <span className='font-medium'>Lưu ý:</span> Vui lòng không đóng trang này cho đến khi bạn hoàn tất
+                      thanh toán. Đơn hàng của bạn sẽ được xử lý sau khi chúng tôi nhận được thanh toán.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className='mt-8 flex justify-center gap-4'>
+                <Button onClick={handleBackToOrderSuccess}>Quay lại</Button>
+                <Button type='primary' onClick={handleContinueShopping} className='bg-blue-500 hover:bg-blue-600'>
+                  Hoàn tất
+                </Button>
+              </div>
             </div>
           </Card>
         )}
