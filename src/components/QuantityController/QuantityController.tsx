@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { InputNumber } from 'antd'
+import { InputNumber, message } from 'antd'
 
 interface Props {
   max?: number
@@ -8,6 +8,7 @@ interface Props {
   onType?: (value: number) => void
   disabled?: boolean
   setBuyCount?: React.Dispatch<React.SetStateAction<number>>
+  productName?: string // Added to show more descriptive error messages
 }
 
 export default function QuantityController({
@@ -16,7 +17,8 @@ export default function QuantityController({
   classNameWrapper = '',
   onType,
   disabled = false,
-  setBuyCount
+  setBuyCount,
+  productName = 'Sản phẩm'
 }: Props) {
   const [localValue, setLocalValue] = useState<number>(value)
   const [isTyping, setIsTyping] = useState(false)
@@ -30,25 +32,40 @@ export default function QuantityController({
     }
   }, [value, isTyping])
 
+  const validateAndUpdate = (newValue: number): boolean => {
+    // Validate min value
+    if (newValue < 1) {
+      setLocalValue(1)
+      return false
+    }
+
+    // Validate max value
+    if (max !== undefined && newValue > max) {
+      message.error(`${productName}: Số lượng không thể vượt quá ${max}`)
+      setLocalValue(max)
+      return false
+    }
+
+    // If we get here, the value is valid
+    setLocalValue(newValue)
+    return true
+  }
+
   const handleChange = (newValue: number | null) => {
     if (newValue === null) {
       return
     }
 
-    let validValue = newValue
-    if (validValue < 1) {
-      validValue = 1
-    } else if (max !== undefined && validValue > max) {
-      validValue = max
+    // Just update the local value during typing, don't validate yet
+    if (isTyping) {
+      setLocalValue(newValue)
+      return
     }
 
-    setLocalValue(validValue)
-    setBuyCount?.(validValue)
-
-    // If the change came from the controls (up/down buttons), call API immediately
-    // We can detect this by checking if the input is not focused
-    if (!isTyping && document.activeElement !== inputRef.current) {
-      onType?.(validValue)
+    // For changes from controls, validate and call API if valid
+    const isValid = validateAndUpdate(newValue)
+    if (isValid && newValue !== value) {
+      onType?.(newValue)
     }
   }
 
@@ -58,17 +75,29 @@ export default function QuantityController({
   }
 
   const handleBlur = () => {
+    // Validate on blur
+    const isValid = validateAndUpdate(localValue)
     setIsTyping(false)
-    // Only call API if value has changed
-    if (previousValue.current !== localValue) {
+
+    // Only call API if value is valid and has changed
+    if (isValid && previousValue.current !== localValue) {
       onType?.(localValue)
+    } else if (!isValid) {
+      // If invalid, reset to a valid value (either max or 1)
+      if (max !== undefined && localValue > max) {
+        onType?.(max)
+      } else if (localValue < 1) {
+        onType?.(1)
+      }
     }
   }
 
   // This handles the step buttons (up/down arrows)
   const handleStep = (value: number) => {
-    setLocalValue(value)
-    onType?.(value)
+    const isValid = validateAndUpdate(value)
+    if (isValid && value !== previousValue.current) {
+      onType?.(value)
+    }
   }
 
   return (

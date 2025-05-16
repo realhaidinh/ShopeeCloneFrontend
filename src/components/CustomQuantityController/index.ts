@@ -1,0 +1,3 @@
+import CustomQuantityController from 'src/components/CustomQuantityController/CustomQuantityController'
+
+export default CustomQuantityController

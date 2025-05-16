@@ -3,9 +3,9 @@ import { Button, message } from 'antd'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import purchaseApi from 'src/apis/purchaseApi'
-import QuantityController from 'src/components/QuantityController'
 import { formatCurrency, generateNameId } from 'src/utils/utils'
 import { CreditCardOutlined, TruckOutlined, WechatOutlined } from '@ant-design/icons'
+import CustomQuantityController from 'src/components/CustomQuantityController'
 
 export default function Cart() {
   const queryClient = useQueryClient()
@@ -109,7 +109,14 @@ export default function Cart() {
 
   // Handle update quantity
   const handleUpdateQuantity = (cartItem: any, newQuantity: number) => {
+    // Don't update if quantity is the same
     if (newQuantity === cartItem.quantity) return
+
+    // Double-check validation against stock (defensive programming)
+    if (cartItem.sku.stock !== undefined && newQuantity > cartItem.sku.stock) {
+      message.error(`${cartItem.sku.product.name}: Số lượng không thể vượt quá ${cartItem.sku.stock}`)
+      return
+    }
 
     // Add item to loading state
     setLoadingItems((prev) => [...prev, cartItem.id])
@@ -284,12 +291,13 @@ export default function Cart() {
                               </div>
                             </div>
                             <div className='col-span-1'>
-                              <QuantityController
+                              <CustomQuantityController
                                 max={cartItem.sku.stock || 0}
                                 value={cartItem.quantity}
                                 disabled={isItemLoading}
                                 onType={(value) => handleUpdateQuantity(cartItem, value)}
                                 classNameWrapper='flex items-center justify-center'
+                                productName={cartItem.sku.product.name}
                               />
                             </div>
                             <div className='col-span-1'>
