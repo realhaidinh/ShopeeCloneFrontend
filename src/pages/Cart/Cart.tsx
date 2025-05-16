@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, message } from 'antd'
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import purchaseApi from 'src/apis/purchaseApi'
 import { formatCurrency, generateNameId } from 'src/utils/utils'
 import { CreditCardOutlined, TruckOutlined, WechatOutlined } from '@ant-design/icons'
@@ -11,6 +11,7 @@ export default function Cart() {
   const queryClient = useQueryClient()
   const [selectedItems, setSelectedItems] = useState<number[]>([])
   const [loadingItems, setLoadingItems] = useState<number[]>([])
+  const navigate = useNavigate()
 
   // Query to get cart items
   const { data: purchasesInCartData, isLoading: isCartLoading } = useQuery({
@@ -183,6 +184,37 @@ export default function Cart() {
 
   // Count selected items
   const selectedItemsCount = selectedItems.length
+
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      message.error('Vui lòng chọn ít nhất một sản phẩm để mua hàng')
+      return
+    }
+
+    // Group selected items by shop
+    const shopItems: Record<number, number[]> = {}
+
+    purchasesInCart.forEach((shop) => {
+      const selectedShopItems = shop.cartItems.filter((item) => selectedItems.includes(item.id)).map((item) => item.id)
+
+      if (selectedShopItems.length > 0) {
+        shopItems[shop.shop.id] = selectedShopItems
+      }
+    })
+
+    // Create a structured object with selected items and their shop info
+    const checkoutData = {
+      shopItems,
+      selectedItems,
+      cartItems: purchasesInCart.flatMap((shop) => shop.cartItems.filter((item) => selectedItems.includes(item.id))),
+      shops: purchasesInCart
+        .filter((shop) => shop.cartItems.some((item) => selectedItems.includes(item.id)))
+        .map((shop) => shop.shop)
+    }
+
+    // Navigate to checkout with the data
+    navigate('/checkout', { state: checkoutData })
+  }
 
   return (
     <div className='bg-neutral-100 py-10'>
@@ -378,6 +410,7 @@ export default function Cart() {
             <Button
               className='mt-5 flex h-10 w-52 items-center justify-center bg-red-500 text-sm uppercase text-white hover:bg-red-600 sm:ml-4 sm:mt-0'
               disabled={selectedItemsCount === 0 || isCartLoading || loadingItems.length > 0}
+              onClick={handleCheckout}
             >
               Mua hàng
             </Button>

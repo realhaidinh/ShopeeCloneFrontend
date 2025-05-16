@@ -16,7 +16,7 @@ export const purchaseApi = {
       quantity: body.quantity
     })
   },
-  createOrder(body: CheckoutItem) {
+  createOrder(body: CheckoutItem[]) {
     return http.post<OrderResponse>('orders', body)
   },
   deleteCart(body: { cartItemIds: number[] }) {

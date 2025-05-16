@@ -11,6 +11,7 @@ import HomePage from 'src/pages/HomePage'
 import ProductDetail from 'src/pages/ProductDetail'
 import Cart from 'src/pages/Cart'
 import CartLayout from 'src/layouts/CartLayout'
+import Checkout from 'src/pages/Checkout'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -77,6 +78,14 @@ export default function useRouteElements() {
           element: (
             <CartLayout>
               <Cart />
+            </CartLayout>
+          )
+        },
+        {
+          path: '/checkout',
+          element: (
+            <CartLayout>
+              <Checkout />
             </CartLayout>
           )
         }
