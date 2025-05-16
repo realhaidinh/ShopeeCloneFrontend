@@ -1,50 +1,91 @@
-import { InputNumber, message } from 'antd'
-import type { InputNumberProps } from 'antd'
+import { useState, useEffect, useRef } from 'react'
+import { InputNumber } from 'antd'
 
 interface Props {
   max?: number
   value?: number
-  setBuyCount: React.Dispatch<React.SetStateAction<number>>
+  classNameWrapper?: string
+  onType?: (value: number) => void
+  disabled?: boolean
+  setBuyCount?: React.Dispatch<React.SetStateAction<number>>
 }
 
-export default function QuantityController({ max = 100, value, setBuyCount }: Props) {
-  const handleValueChange = (value: number | null) => {
-    if (value === null || value < 1) {
-      setBuyCount(1)
+export default function QuantityController({
+  max,
+  value = 1,
+  classNameWrapper = '',
+  onType,
+  disabled = false,
+  setBuyCount
+}: Props) {
+  const [localValue, setLocalValue] = useState<number>(value)
+  const [isTyping, setIsTyping] = useState(false)
+  const previousValue = useRef<number>(value)
+  const inputRef = useRef<any>(null)
+
+  // Update local value when prop value changes
+  useEffect(() => {
+    if (!isTyping) {
+      setLocalValue(value)
+    }
+  }, [value, isTyping])
+
+  const handleChange = (newValue: number | null) => {
+    if (newValue === null) {
       return
     }
-    if (max !== undefined && value > max) {
-      message.error(`Số lượng không được vượt quá tồn kho`)
-      setBuyCount(max)
-      return
+
+    let validValue = newValue
+    if (validValue < 1) {
+      validValue = 1
+    } else if (max !== undefined && validValue > max) {
+      validValue = max
     }
-    setBuyCount(value)
+
+    setLocalValue(validValue)
+    setBuyCount?.(validValue)
+
+    // If the change came from the controls (up/down buttons), call API immediately
+    // We can detect this by checking if the input is not focused
+    if (!isTyping && document.activeElement !== inputRef.current) {
+      onType?.(validValue)
+    }
   }
 
-  const handleInputChange = (e: React.FocusEvent<HTMLInputElement>) => {
-    const inputElement = e.target as HTMLInputElement
-    const value = inputElement.value
-    // Nếu rỗng, reset về 1
-    if (value === '') {
-      message.error(`Số lượng không phù hợp`)
-      handleValueChange(1)
-      return
+  const handleFocus = () => {
+    setIsTyping(true)
+    previousValue.current = localValue
+  }
+
+  const handleBlur = () => {
+    setIsTyping(false)
+    // Only call API if value has changed
+    if (previousValue.current !== localValue) {
+      onType?.(localValue)
     }
-    const numValue = Number(value)
-    if (!isNaN(numValue)) {
-      handleValueChange(numValue)
-    }
+  }
+
+  // This handles the step buttons (up/down arrows)
+  const handleStep = (value: number) => {
+    setLocalValue(value)
+    onType?.(value)
   }
 
   return (
-    <div>
+    <div className={`flex items-center ${classNameWrapper}`}>
       <InputNumber
+        className='w-24'
+        value={localValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onStep={handleStep}
         min={1}
         max={max}
-        value={value}
-        size='large'
-        onBlur={handleInputChange} // Gọi khi mất focus
-        onStep={handleValueChange} // Gọi khi nhấn nút tăng/giảm
+        disabled={disabled}
+        controls
+        size='middle'
+        ref={inputRef}
       />
     </div>
   )
