@@ -1,15 +1,20 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { createSearchParams, Link, useNavigate, useParams } from 'react-router-dom'
 import { Select, Dropdown, Space, Button, Popover, Badge, message } from 'antd'
 import type { MenuProps } from 'antd'
 import { DownOutlined, UserOutlined } from '@ant-design/icons'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import authApi from 'src/apis/auth.api'
 import { AppContext } from 'src/contexts/app.context'
 import { getRefreshTokenFromLS } from 'src/utils/auth'
 import { toast } from 'react-toastify'
 import useQueryConfig from 'src/hooks/useQueryConfig'
 import { omit } from 'lodash'
+import purchaseApi from 'src/apis/purchaseApi'
+import { Empty } from 'antd'
+import { CartItem, CartItemWithSKU, ShopCart } from 'src/types/purchase.type'
+import { formatCurrency } from 'src/utils/utils'
+import { queryClient } from 'src/main'
 
 export default function Header() {
   const { categoryParentId } = useParams<{ categoryParentId: string }>()
@@ -22,8 +27,28 @@ export default function Header() {
       setIsAuthenticated(false)
       setProfile(null)
       toast.success('Logout successfully')
+      queryClient.removeQueries({ queryKey: ['purchases'] })
     }
   })
+
+  const { data: cartData } = useQuery({
+    queryKey: ['purchases'],
+    queryFn: () => purchaseApi.getCart(),
+    enabled: isAuthenticated
+  })
+
+  const cart: CartItemWithSKU[] = [] as CartItemWithSKU[]
+  cartData?.data.data.map((item: ShopCart) => {
+    item.cartItems.map((cartItem: CartItemWithSKU) => {
+      cart.push(cartItem)
+    })
+  })
+
+  useEffect(() => {
+    return () => {
+      // console.log(`header unmount`)
+    }
+  }, [])
   const handleLogout = () => {
     const refreshToken = getRefreshTokenFromLS()
     logoutMutation.mutate({ refreshToken })
@@ -54,112 +79,40 @@ export default function Header() {
   }
   const navigate = useNavigate()
   const content = (
-    <div className='mt-3 flex max-h-[300px] max-w-[400px] flex-col justify-start'>
-      <div className='overflow-y-scroll scroll-auto'>
-        <div className='mt-4 flex'>
-          <div className='flex-shrink-0'>
-            <img
-              src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
-              alt='anh'
-              className='h-11 w-11 w-full object-cover'
-            />
-          </div>
-          <div className='ml-2 flex-grow overflow-hidden'>
-            <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
-            <div>
-              <span>Số lượng: </span>
-              <span className='text-orange'>1</span>
+    <div className='mt-3 flex max-h-[350px] w-[400px] flex-col justify-start'>
+      <div className='overflow-y-scroll'>
+        {cart.length > 0 ? (
+          cart.map((item: CartItemWithSKU) => (
+            <div className='mt-4 flex ' key={item.id}>
+              <div className='flex-shrink-0'>
+                <img src={item.sku.image} alt='anh' className='h-11 w-11 w-full object-cover' />
+              </div>
+              <div className='ml-2 flex-grow overflow-hidden'>
+                <div className='truncate'>{item.sku.product.name + ' ' + item.sku.value}</div>
+                <div>
+                  <span>Số lượng: </span>
+                  <span className='text-orange'>{item.quantity}</span>
+                </div>
+              </div>
+              <div className='ml-2 flex-shrink-0'>
+                <span className='text-orange'>{formatCurrency(item.quantity * item.sku.price)}</span>
+              </div>
             </div>
-          </div>
-          <div className='ml-2 flex-shrink-0'>
-            <span className='text-orange'>₫469.000</span>
-          </div>
-        </div>
-        <div className='mt-4 flex'>
-          <div className='flex-shrink-0'>
-            <img
-              src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
-              alt='anh'
-              className='h-11 w-11 object-cover'
-            />
-          </div>
-          <div className='ml-2 flex-grow overflow-hidden'>
-            <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
-            <div>
-              <span>Số lượng: </span>
-              <span className='text-orange'>1</span>
-            </div>
-          </div>
-          <div className='ml-2 flex-shrink-0'>
-            <span className='text-orange'>₫469.000</span>
-          </div>
-        </div>
-        <div className='mt-4 flex'>
-          <div className='flex-shrink-0'>
-            <img
-              src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
-              alt='anh'
-              className='h-11 w-11 object-cover'
-            />
-          </div>
-          <div className='ml-2 flex-grow overflow-hidden'>
-            <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
-            <div>
-              <span>Số lượng: </span>
-              <span className='text-orange'>1</span>
-            </div>
-          </div>
-          <div className='ml-2 flex-shrink-0'>
-            <span className='text-orange'>₫469.000</span>
-          </div>
-        </div>
-        <div className='mt-4 flex'>
-          <div className='flex-shrink-0'>
-            <img
-              src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
-              alt='anh'
-              className='h-11 w-11 object-cover'
-            />
-          </div>
-          <div className='ml-2 flex-grow overflow-hidden'>
-            <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
-            <div>
-              <span>Số lượng: </span>
-              <span className='text-orange'>1</span>
-            </div>
-          </div>
-          <div className='ml-2 flex-shrink-0'>
-            <span className='text-orange'>₫469.000</span>
-          </div>
-        </div>
-        <div className='mt-4 flex'>
-          <div className='flex-shrink-0'>
-            <img
-              src='https://cf.shopee.vn/file/sg-11134201-22110-s3ycuwtvgvjvb4_tn'
-              alt='anh'
-              className='h-11 w-11 object-cover'
-            />
-          </div>
-          <div className='ml-2 flex-grow overflow-hidden'>
-            <div className='truncate'>[LIFEMCMBP2 -12% đơn 250K] Bộ Nồi Inox 3 Đáy SUNHOUSE SH334 16, 20, 24 cm</div>
-            <div>
-              <span>Số lượng: </span>
-              <span className='text-orange'>1</span>
-            </div>
-          </div>
-          <div className='ml-2 flex-shrink-0'>
-            <span className='text-orange'>₫469.000</span>
-          </div>
-        </div>
+          ))
+        ) : (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
       </div>
-      <div className='mt-6 flex min-h-fit items-center justify-between'>
-        <div className='text-xs capitalize text-gray-500'>
-          Tổng số lượng sản phẩm: <span className='text-lg'>5</span>
+      {cart.length > 0 && (
+        <div className='mt-6 flex min-h-fit items-center justify-between'>
+          <div className='text-xs capitalize text-gray-500'>
+            Tổng số loại sản phẩm: <span className='text-lg'>{cart.length}</span>
+          </div>
+          <Link to={'/cart'} className='rounded-sm bg-orange px-4 py-2 capitalize text-white hover:bg-opacity-90'>
+            Xem giỏ hàng
+          </Link>
         </div>
-        <button className='rounded-sm bg-orange px-4 py-2 capitalize text-white hover:bg-opacity-90'>
-          Xem giỏ hàng
-        </button>
-      </div>
+      )}
     </div>
   )
   const onSubmitSearch = (event: React.FormEvent<HTMLFormElement>) => {
@@ -279,7 +232,7 @@ export default function Header() {
             </div>
           </form>
           <div className='cols-span-1 ml-5'>
-            <Badge count={99} overflowCount={10}>
+            <Badge count={cart.length} overflowCount={5}>
               <Popover
                 placement='bottom'
                 content={content}

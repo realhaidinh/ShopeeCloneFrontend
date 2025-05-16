@@ -2,7 +2,7 @@
 
 import type React from 'react'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Rate, Spin } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -10,20 +10,31 @@ import { useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
 import QuantityController from 'src/components/QuantityController'
 import Product from 'src/pages/ProductList/Product'
-import type { ProductListConfig } from 'src/types/product.type'
+import type { ProductListConfig, Sku } from 'src/types/product.type'
 import { formatCurrency, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
+import purchaseApi from 'src/apis/purchaseApi'
+import { toast } from 'react-toastify'
+import type { StatisticTimerProps } from 'antd'
+import { Col, Row, Statistic } from 'antd'
+import { ClockCircleOutlined } from '@ant-design/icons'
+import { queryClient } from 'src/main'
+
+const { Timer } = Statistic
 
 export default function ProductDetail() {
   const { nameId } = useParams()
+  const [deadline, setDeadline] = useState(Date.now() + 1000 * 60 * 60) // 1 phút
   const [buyCount, setBuyCount] = useState(1)
   const id = getIdFromNameId(nameId as string)
   const { data: productDetailData } = useQuery({
     queryKey: ['product', id],
     queryFn: () => productApi.getProductDetail(id as string),
-    staleTime: 3 * 60 * 1000
+    staleTime: 1 * 60 * 1000
   })
+  const addToCartMutation = useMutation(purchaseApi.addToCart)
+
   const product = productDetailData
-  const [selectedSKU, setSelectedSKU] = useState<any>(null)
+  const [selectedSKU, setSelectedSKU] = useState<Sku>({} as Sku)
 
   // Set default selected SKU when product data is loaded
   useEffect(() => {
@@ -111,8 +122,33 @@ export default function ProductDetail() {
     imageRef.current?.removeAttribute('style')
   }
 
+  const onFinish: StatisticTimerProps['onFinish'] = () => {
+    setDeadline(Date.now() + 1000 * 60 * 60) // +1 phút nữa
+  }
+
   const handleBuyCount = (value: number) => {
     setBuyCount(value)
+  }
+
+  const handleAddToCart = () => {
+    // console.log({
+    //   quantity: buyCount,
+    //   skuId: selectedSKU.id
+    // })
+    addToCartMutation.mutate(
+      {
+        quantity: buyCount,
+        skuId: selectedSKU.id
+      },
+      {
+        onSuccess: () => {
+          toast.success('Add to cart successfully', {
+            autoClose: 1300
+          })
+          queryClient.invalidateQueries({ queryKey: ['purchases'] })
+        }
+      }
+    )
   }
 
   return product ? (
@@ -197,13 +233,30 @@ export default function ProductDetail() {
                   </span>
                   <span className='ml-1 text-gray-500'>Đã bán</span>
                 </div>
+                <div className='mx-4 h-4 w-[1px] bg-gray-300'></div>
+                <div>
+                  <span>{product.data.skus.reduce((prev, next) => prev + next.stock, 0)}</span>
+                  <span className='ml-1 text-gray-500'>Sản phẩm</span>
+                </div>
               </div>
 
-              <div className='mt-8 flex items-center bg-gray-50 px-5 py-4'>
+              <div className='mt-8 flex items-center justify-between bg-orange p-2 '>
+                <img
+                  src='https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/productdetailspage/8eebfcdc539676df4457.svg'
+                  alt=''
+                />
+                <div className='flex items-center gap-3'>
+                  <ClockCircleOutlined style={{ color: 'white' }} />
+                  <span className='uppercase text-white'>Kết thúc trong: </span>
+                  <Timer type='countdown' value={deadline} onFinish={onFinish} valueStyle={{ color: 'white' }} />
+                </div>
+              </div>
+
+              <div className='flex items-center bg-gray-50 px-5 py-4'>
                 <div className='text-gray-500 line-through'>₫{formatCurrency(product.data.virtualPrice)}</div>
-                <div className='ml-3 text-3xl font-medium text-orange'>₫{formatCurrency(product.data.basePrice)}</div>
+                <div className='ml-3 text-3xl font-medium text-orange'>₫{formatCurrency(selectedSKU.price)}</div>
                 <div className='ml-4 rounded-sm bg-orange px-1 py-[2px] text-xs font-semibold uppercase text-white'>
-                  {rateSale(product.data.virtualPrice, product.data.basePrice)} giảm
+                  {rateSale(product.data.virtualPrice, selectedSKU.price)} giảm
                 </div>
               </div>
 
@@ -242,7 +295,10 @@ export default function ProductDetail() {
               </div>
 
               <div className='mt-8 flex items-center'>
-                <button className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'>
+                <button
+                  onClick={handleAddToCart}
+                  className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'
+                >
                   <svg
                     enableBackground='new 0 0 15 15'
                     viewBox='0 0 15 15'
