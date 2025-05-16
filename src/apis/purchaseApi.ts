@@ -1,4 +1,4 @@
-import { CartItem, CartResponse, CheckoutItem, OrderResponse } from 'src/types/purchase.type'
+import { CartItem, CartResponse, CheckoutItem, ListOrdersResponse, Order, OrderResponse } from 'src/types/purchase.type'
 import http from 'src/utils/http'
 
 const URL = 'cart'
@@ -21,6 +21,15 @@ export const purchaseApi = {
   },
   deleteCart(body: { cartItemIds: number[] }) {
     return http.post<{ message: string }>(`${URL}/delete`, body)
+  },
+  getListOrders(params: { page: number; limit: number }) {
+    return http.get<ListOrdersResponse>('orders', { params })
+  },
+  getDetailOrder(id: number) {
+    return http.get<Order>(`orders/${id}`)
+  },
+  cancelOrder(id: number) {
+    return http.put<Order>(`orders/${id}`)
   }
 }
 

@@ -96,9 +96,43 @@ export interface Order {
   deletedAt: string | null
   createdAt: string
   updatedAt: string
+  items?: ListOrderItem[]
 }
 
 export interface OrderResponse {
   orders: Order[]
   paymentId: number
+}
+
+export interface ListOrdersResponse {
+  data: ListOrder[]
+  totalItems: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface ListOrder {
+  id: number
+  userId: number
+  status: string
+  shopId: number
+  paymentId: number
+  createdAt: string
+  updatedAt: string
+  items: ListOrderItem[]
+}
+
+export interface ListOrderItem {
+  id: number
+  productId: number
+  productName: string
+  productTranslations: ProductTranslation[]
+  skuPrice: number
+  image: string
+  skuValue: string
+  skuId: number
+  orderId: number
+  quantity: number
+  createdAt: string
 }
