@@ -185,7 +185,7 @@ export default function Cart() {
   const selectedItemsCount = selectedItems.length
 
   return (
-    <div className='bg-neutral-100 py-16'>
+    <div className='bg-neutral-100 py-10'>
       <div className='container'>
         <div className='overflow-auto'>
           <div className='min-w-[1000px]'>

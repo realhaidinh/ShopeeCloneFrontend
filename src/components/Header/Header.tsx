@@ -1,35 +1,21 @@
 import { useContext, useEffect, useState } from 'react'
 import { createSearchParams, Link, useNavigate, useParams } from 'react-router-dom'
-import { Select, Dropdown, Space, Button, Popover, Badge, message } from 'antd'
-import type { MenuProps } from 'antd'
-import { DownOutlined, UserOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import authApi from 'src/apis/auth.api'
+import { Button, Popover, Badge, message } from 'antd'
+import { useQuery } from '@tanstack/react-query'
 import { AppContext } from 'src/contexts/app.context'
-import { getRefreshTokenFromLS } from 'src/utils/auth'
-import { toast } from 'react-toastify'
 import useQueryConfig from 'src/hooks/useQueryConfig'
 import { omit } from 'lodash'
 import purchaseApi from 'src/apis/purchaseApi'
 import { Empty } from 'antd'
-import { CartItem, CartItemWithSKU, ShopCart } from 'src/types/purchase.type'
+import { CartItemWithSKU, ShopCart } from 'src/types/purchase.type'
 import { formatCurrency } from 'src/utils/utils'
-import { queryClient } from 'src/main'
+import NavHeader from 'src/components/NavHeader'
 
 export default function Header() {
   const { categoryParentId } = useParams<{ categoryParentId: string }>()
   const queryConfig = useQueryConfig()
-  const [keyword, setKeyword] = useState<string>('')
-  const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
-  const logoutMutation = useMutation({
-    mutationFn: (body: { refreshToken: string }) => authApi.logout(body),
-    onSuccess: () => {
-      setIsAuthenticated(false)
-      setProfile(null)
-      toast.success('Logout successfully')
-      queryClient.removeQueries({ queryKey: ['purchases'] })
-    }
-  })
+  const [keyword, setKeyword] = useState<string>((queryConfig.name as string) || '')
+  const { isAuthenticated } = useContext(AppContext)
 
   const { data: cartData } = useQuery({
     queryKey: ['purchases'],
@@ -49,30 +35,6 @@ export default function Header() {
       // console.log(`header unmount`)
     }
   }, [])
-  const handleLogout = () => {
-    const refreshToken = getRefreshTokenFromLS()
-    logoutMutation.mutate({ refreshToken })
-  }
-  const { Option } = Select
-  const items: MenuProps['items'] = [
-    {
-      key: '1',
-      label: <Link to='/profile'>Tài khoản của tôi</Link>
-    },
-    {
-      key: '2',
-      label: <Link to='/orders'>Đơn mua</Link>
-    },
-    {
-      key: '3',
-      label: (
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-        <span onClick={handleLogout} className='block w-full cursor-pointer'>
-          Đăng xuất
-        </span>
-      )
-    }
-  ]
   const [open, setOpen] = useState(false)
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen)
@@ -144,54 +106,7 @@ export default function Header() {
   return (
     <header className='bg-[linear-gradient(-180deg,#f53d2d,#f63)] pb-5 pt-2 text-sm text-white'>
       <div className='container'>
-        <div className='flex justify-end'>
-          <div className='flex cursor-pointer items-center py-1'>
-            <span className='mr-2'>Ngôn ngữ</span>
-            <Select
-              onSelect={(value) => console.log(value)}
-              placeholder='Select language'
-              className='ml-2 w-[9rem]'
-              defaultValue='vi'
-            >
-              <Option value='vi'>
-                <span className='flex items-center'>
-                  <img src='https://flagcdn.com/w40/vn.png' alt='vn' className='mr-2 h-4 w-6' />
-                  Tiếng Việt
-                </span>
-              </Option>
-              <Option value='en'>
-                <span className='flex items-center'>
-                  <img src='https://flagcdn.com/w40/gb.png' alt='en' className='mr-2 h-4 w-6' />
-                  English
-                </span>
-              </Option>
-            </Select>
-          </div>
-          {isAuthenticated && (
-            <div className='ml-6 flex cursor-pointer items-center py-1 hover:text-gray-300'>
-              <div className='mr-1 h-6 w-6 flex-shrink-0'>
-                <UserOutlined style={{ fontSize: '20px' }} />
-              </div>
-              <Dropdown menu={{ items }}>
-                <Space>
-                  Hi, {profile?.email}
-                  <DownOutlined className='text-xs' />
-                </Space>
-              </Dropdown>
-            </div>
-          )}
-          {!isAuthenticated && (
-            <div className='flex items-center'>
-              <Link to='/register' className='mx-3 capitalize hover:text-white/70'>
-                Đăng ký
-              </Link>
-              <div className='h-4 border-r-[1px] border-r-white/40' />
-              <Link to='/login' className='mx-3 capitalize hover:text-white/70'>
-                Đăng nhập
-              </Link>
-            </div>
-          )}
-        </div>
+        <NavHeader />
         <div className='mt-4 grid grid-cols-12 items-center gap-4'>
           <Link to='/' className='col-span-2'>
             <svg viewBox='0 0 192 65' className='h-11 fill-white'>
