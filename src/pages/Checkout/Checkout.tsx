@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react'
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Button, Form, Input, message, Steps, Card, Divider, Avatar, Collapse, List, Spin } from 'antd'
+import { Button, Form, Input, message, Steps, Card, Divider, Avatar, Collapse, List, Spin, Result } from 'antd'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CheckCircleOutlined,
   ShoppingCartOutlined,
   UserOutlined,
   CopyOutlined,
-  CreditCardOutlined
+  CreditCardOutlined,
+  LoadingOutlined
 } from '@ant-design/icons'
 import purchaseApi from 'src/apis/purchaseApi'
 import type { CartItemWithSKU, CheckoutItem, OrderResponse, Receiver, Shop } from 'src/types/purchase.type'
 import { formatCurrency } from 'src/utils/utils'
 import type { AxiosResponse } from 'axios'
+import io, { Socket } from 'socket.io-client'
+import { getAccessTokenFromLS } from 'src/utils/auth'
 
 const { Panel } = Collapse
 
@@ -21,6 +26,11 @@ interface CheckoutState {
   selectedItems: number[]
   cartItems: CartItemWithSKU[]
   shops: Shop[]
+}
+
+interface PaymentStatus {
+  status: string
+  message?: string
 }
 
 export default function Checkout() {
@@ -34,6 +44,9 @@ export default function Checkout() {
   const [orderResponse, setOrderResponse] = useState<OrderResponse | null>(null)
   const [receiverInfo, setReceiverInfo] = useState<Receiver | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
+  const socketRef = useRef<Socket | null>(null)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   // Create order mutation - Now with proper typing
   const createOrderMutation = useMutation<AxiosResponse<OrderResponse>, Error, CheckoutItem[]>({
@@ -51,6 +64,86 @@ export default function Checkout() {
       setIsSubmitting(false)
     }
   })
+
+  // Connect to WebSocket server when entering payment step
+  useEffect(() => {
+    if (currentStep === 3 && orderResponse?.paymentId) {
+      connectToWebSocket(orderResponse.paymentId)
+    }
+
+    // Cleanup WebSocket connection when leaving payment step
+    return () => {
+      if (socketRef.current) {
+        console.log('Closing WebSocket connection')
+        socketRef.current.disconnect()
+        socketRef.current = null
+      }
+    }
+  }, [currentStep, orderResponse])
+
+  // Connect to WebSocket server
+  const connectToWebSocket = (paymentId: number) => {
+    // Close existing connection if any
+    if (socketRef.current) {
+      socketRef.current.disconnect()
+      socketRef.current = null
+    }
+
+    setIsConnecting(true)
+    const accessToken = getAccessTokenFromLS()
+    console.log('Connecting to WebSocket with token:', accessToken ? 'Token exists' : 'No token')
+
+    // Create new connection with auth token
+    const socket = io(import.meta.env.VITE_SOCKET_URL, {
+      extraHeaders: {
+        authorization: `bearer ${accessToken}`
+      }
+    })
+
+    socket.on('connect', () => {
+      console.log('WebSocket connected with ID:', socket.id)
+      setIsConnecting(false)
+
+      // Join payment room
+      socket.emit('join', { paymentId: paymentId })
+      console.log('Joined payment room for ID:', paymentId)
+    })
+
+    socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error)
+      message.error(`Không thể kết nối đến máy chủ: ${error.message}`)
+      setIsConnecting(false)
+    })
+
+    socket.on('payment', (data: PaymentStatus) => {
+      console.log('Payment event received:', data)
+
+      if (data.status === 'success') {
+        // Update payment status
+        setPaymentStatus({
+          status: 'success',
+          message: 'Thanh toán thành công!'
+        })
+
+        // Show success message
+        message.success('Thanh toán thành công!')
+
+        // Refresh order data if needed
+        queryClient.invalidateQueries({ queryKey: ['purchases'] })
+      }
+    })
+
+    socket.on('disconnect', () => {
+      console.log('WebSocket disconnected')
+    })
+
+    socket.on('error', (error) => {
+      console.error('WebSocket error:', error)
+    })
+
+    // Store socket reference
+    socketRef.current = socket
+  }
 
   // Get checkout data from location state
   useEffect(() => {
@@ -150,17 +243,32 @@ export default function Checkout() {
 
   // Handle back to cart
   const handleBackToCart = () => {
-    navigate('/cart')
+    // Only allow going back if we're in the first step
+    if (currentStep === 0) {
+      navigate('/cart')
+    } else {
+      message.info('Không thể quay lại khi đã tiến hành đặt hàng')
+    }
   }
 
   // Handle back to information
   const handleBackToInfo = () => {
-    setCurrentStep(0)
+    // Only allow going back one step
+    if (currentStep === 1) {
+      setCurrentStep(0)
+    } else {
+      message.info('Không thể quay lại các bước trước')
+    }
   }
 
   // Handle back to order success
   const handleBackToOrderSuccess = () => {
-    setCurrentStep(2)
+    // Only allow going back one step
+    if (currentStep === 3) {
+      setCurrentStep(2)
+    } else {
+      message.info('Không thể quay lại các bước trước')
+    }
   }
 
   // Handle continue shopping after order
@@ -568,134 +676,163 @@ export default function Checkout() {
 
         {currentStep === 3 && orderResponse && (
           <Card className='py-10'>
-            <div className='mb-6 text-center'>
-              <CreditCardOutlined className='mb-4 text-5xl text-blue-500' />
-              <h2 className='mb-2 text-2xl font-bold'>Thanh toán đơn hàng</h2>
-              <p className='text-gray-500'>Quét mã QR bên dưới để thanh toán đơn hàng của bạn</p>
-            </div>
+            {paymentStatus && paymentStatus.status === 'success' ? (
+              <Result
+                status='success'
+                title='Thanh toán thành công!'
+                subTitle='Cảm ơn bạn đã thanh toán. Đơn hàng của bạn đang được xử lý và sẽ được giao trong thời gian sớm nhất.'
+                extra={[
+                  <Button
+                    type='primary'
+                    key='console'
+                    onClick={handleContinueShopping}
+                    className='bg-blue-500 hover:bg-blue-600'
+                  >
+                    Tiếp tục mua sắm
+                  </Button>,
+                  <Button key='orders' onClick={() => navigate('/orders')}>
+                    Xem đơn hàng
+                  </Button>
+                ]}
+              />
+            ) : (
+              <>
+                <div className='mb-6 text-center'>
+                  <CreditCardOutlined className='mb-4 text-5xl text-blue-500' />
+                  <h2 className='mb-2 text-2xl font-bold'>Thanh toán đơn hàng</h2>
+                  <p className='text-gray-500'>Quét mã QR bên dưới để thanh toán đơn hàng của bạn</p>
+                  {isConnecting && (
+                    <div className='mt-2 flex items-center justify-center text-blue-500'>
+                      <LoadingOutlined className='mr-2' />
+                      <span>Đang kết nối đến máy chủ thanh toán...</span>
+                    </div>
+                  )}
+                </div>
 
-            <div className='mx-auto max-w-3xl'>
-              <div className='grid grid-cols-1 gap-8 md:grid-cols-2'>
-                <div>
-                  <Card title='Thông tin thanh toán' className='mb-4'>
-                    <div className='space-y-4'>
-                      <div className='flex items-center justify-between'>
-                        <span className='text-gray-500'>Mã thanh toán:</span>
-                        <div className='flex items-center'>
-                          <span className='mr-2 font-medium'>#{orderResponse.paymentId}</span>
-                          <Button
-                            type='text'
-                            icon={<CopyOutlined />}
-                            size='small'
-                            onClick={copyPaymentId}
-                            className='text-blue-500'
-                          />
+                <div className='mx-auto max-w-3xl'>
+                  <div className='grid grid-cols-1 gap-8 md:grid-cols-2'>
+                    <div>
+                      <Card title='Thông tin thanh toán' className='mb-4'>
+                        <div className='space-y-4'>
+                          <div className='flex items-center justify-between'>
+                            <span className='text-gray-500'>Mã thanh toán:</span>
+                            <div className='flex items-center'>
+                              <span className='mr-2 font-medium'>#{orderResponse.paymentId}</span>
+                              <Button
+                                type='text'
+                                icon={<CopyOutlined />}
+                                size='small'
+                                onClick={copyPaymentId}
+                                className='text-blue-500'
+                              />
+                            </div>
+                          </div>
+
+                          <div className='flex justify-between'>
+                            <span className='text-gray-500'>Tổng đơn hàng:</span>
+                            <span>{orderResponse.orders.length} đơn</span>
+                          </div>
+
+                          <div className='flex justify-between'>
+                            <span className='text-gray-500'>Tổng tiền hàng:</span>
+                            <span>₫{formatCurrency(total + savings)}</span>
+                          </div>
+
+                          <div className='flex justify-between text-red-500'>
+                            <span className='text-gray-500'>Tổng giảm giá:</span>
+                            <span>-₫{formatCurrency(savings)}</span>
+                          </div>
+
+                          <Divider className='my-2' />
+
+                          <div className='flex justify-between text-lg font-bold'>
+                            <span>Tổng thanh toán:</span>
+                            <span className='text-red-500'>₫{formatCurrency(total)}</span>
+                          </div>
                         </div>
-                      </div>
+                      </Card>
 
-                      <div className='flex justify-between'>
-                        <span className='text-gray-500'>Tổng đơn hàng:</span>
-                        <span>{orderResponse.orders.length} đơn</span>
-                      </div>
+                      <Card title='Hướng dẫn thanh toán' className='mb-4'>
+                        <div className='space-y-4'>
+                          <div>
+                            <h4 className='mb-1 font-medium'>1. Mở ứng dụng ngân hàng</h4>
+                            <p className='text-sm text-gray-500'>
+                              Mở ứng dụng ngân hàng của bạn và chọn chức năng quét mã QR
+                            </p>
+                          </div>
 
-                      <div className='flex justify-between'>
-                        <span className='text-gray-500'>Tổng tiền hàng:</span>
-                        <span>₫{formatCurrency(total + savings)}</span>
-                      </div>
+                          <div>
+                            <h4 className='mb-1 font-medium'>2. Quét mã QR</h4>
+                            <p className='text-sm text-gray-500'>Quét mã QR hiển thị bên cạnh</p>
+                          </div>
 
-                      <div className='flex justify-between text-red-500'>
-                        <span className='text-gray-500'>Tổng giảm giá:</span>
-                        <span>-₫{formatCurrency(savings)}</span>
-                      </div>
+                          <div>
+                            <h4 className='mb-1 font-medium'>3. Kiểm tra thông tin</h4>
+                            <p className='text-sm text-gray-500'>Kiểm tra thông tin người nhận và số tiền thanh toán</p>
+                          </div>
 
-                      <Divider className='my-2' />
+                          <div>
+                            <h4 className='mb-1 font-medium'>4. Nhập nội dung chuyển khoản</h4>
+                            <p className='text-sm text-gray-500'>
+                              Nhập nội dung chuyển khoản:{' '}
+                              <span className='font-medium'>
+                                {import.meta.env.VITE_PAYMENT_PREFIX}
+                                {orderResponse.paymentId}
+                              </span>
+                            </p>
+                          </div>
 
-                      <div className='flex justify-between text-lg font-bold'>
-                        <span>Tổng thanh toán:</span>
-                        <span className='text-red-500'>₫{formatCurrency(total)}</span>
-                      </div>
+                          <div>
+                            <h4 className='mb-1 font-medium'>5. Xác nhận thanh toán</h4>
+                            <p className='text-sm text-gray-500'>Xác nhận và hoàn tất giao dịch</p>
+                          </div>
+                        </div>
+                      </Card>
                     </div>
-                  </Card>
 
-                  <Card title='Hướng dẫn thanh toán' className='mb-4'>
-                    <div className='space-y-4'>
-                      <div>
-                        <h4 className='mb-1 font-medium'>1. Mở ứng dụng ngân hàng</h4>
-                        <p className='text-sm text-gray-500'>
-                          Mở ứng dụng ngân hàng của bạn và chọn chức năng quét mã QR
+                    <div className='flex flex-col items-center'>
+                      <div className='mb-4 w-full max-w-xs rounded-lg bg-white p-4 shadow-md'>
+                        {qrLoading ? (
+                          <div className='mx-auto flex h-64 w-64 items-center justify-center'>
+                            <Spin tip='Đang tải mã QR...' />
+                          </div>
+                        ) : (
+                          <img
+                            src={generateQrCodeUrl(orderResponse.paymentId, total) || '/placeholder.svg'}
+                            alt='Mã QR thanh toán'
+                            className='mx-auto h-64 w-64'
+                            onLoad={() => setQrLoading(false)}
+                            onError={() => {
+                              setQrLoading(false)
+                              message.error('Không thể tải mã QR. Vui lòng thử lại sau.')
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      <p className='mb-6 text-center text-sm text-gray-500'>
+                        Quét mã QR để thanh toán số tiền{' '}
+                        <span className='font-medium text-red-500'>₫{formatCurrency(total)}</span>
+                      </p>
+
+                      <div className='w-full rounded-lg border border-yellow-200 bg-yellow-50 p-4'>
+                        <p className='text-sm text-yellow-800'>
+                          <span className='font-medium'>Lưu ý:</span> Vui lòng không đóng trang này cho đến khi bạn hoàn
+                          tất thanh toán. Đơn hàng của bạn sẽ được xử lý sau khi chúng tôi nhận được thanh toán.
                         </p>
                       </div>
-
-                      <div>
-                        <h4 className='mb-1 font-medium'>2. Quét mã QR</h4>
-                        <p className='text-sm text-gray-500'>Quét mã QR hiển thị bên cạnh</p>
-                      </div>
-
-                      <div>
-                        <h4 className='mb-1 font-medium'>3. Kiểm tra thông tin</h4>
-                        <p className='text-sm text-gray-500'>Kiểm tra thông tin người nhận và số tiền thanh toán</p>
-                      </div>
-
-                      <div>
-                        <h4 className='mb-1 font-medium'>4. Nhập nội dung chuyển khoản</h4>
-                        <p className='text-sm text-gray-500'>
-                          Nhập nội dung chuyển khoản:{' '}
-                          <span className='font-medium'>
-                            {import.meta.env.VITE_PAYMENT_PREFIX}
-                            {orderResponse.paymentId}
-                          </span>
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className='mb-1 font-medium'>5. Xác nhận thanh toán</h4>
-                        <p className='text-sm text-gray-500'>Xác nhận và hoàn tất giao dịch</p>
-                      </div>
                     </div>
-                  </Card>
-                </div>
-
-                <div className='flex flex-col items-center'>
-                  <div className='mb-4 w-full max-w-xs rounded-lg bg-white p-4 shadow-md'>
-                    {qrLoading ? (
-                      <div className='mx-auto flex h-64 w-64 items-center justify-center'>
-                        <Spin tip='Đang tải mã QR...' />
-                      </div>
-                    ) : (
-                      <img
-                        src={generateQrCodeUrl(orderResponse.paymentId, total) || '/placeholder.svg'}
-                        alt='Mã QR thanh toán'
-                        className='mx-auto h-64 w-64'
-                        onLoad={() => setQrLoading(false)}
-                        onError={() => {
-                          setQrLoading(false)
-                          message.error('Không thể tải mã QR. Vui lòng thử lại sau.')
-                        }}
-                      />
-                    )}
                   </div>
 
-                  <p className='mb-6 text-center text-sm text-gray-500'>
-                    Quét mã QR để thanh toán số tiền{' '}
-                    <span className='font-medium text-red-500'>₫{formatCurrency(total)}</span>
-                  </p>
-
-                  <div className='w-full rounded-lg border border-yellow-200 bg-yellow-50 p-4'>
-                    <p className='text-sm text-yellow-800'>
-                      <span className='font-medium'>Lưu ý:</span> Vui lòng không đóng trang này cho đến khi bạn hoàn tất
-                      thanh toán. Đơn hàng của bạn sẽ được xử lý sau khi chúng tôi nhận được thanh toán.
-                    </p>
+                  <div className='mt-8 flex justify-center gap-4'>
+                    <Button onClick={handleBackToOrderSuccess}>Quay lại</Button>
+                    <Button type='primary' onClick={handleContinueShopping} className='bg-blue-500 hover:bg-blue-600'>
+                      Hoàn tất
+                    </Button>
                   </div>
                 </div>
-              </div>
-
-              <div className='mt-8 flex justify-center gap-4'>
-                <Button onClick={handleBackToOrderSuccess}>Quay lại</Button>
-                <Button type='primary' onClick={handleContinueShopping} className='bg-blue-500 hover:bg-blue-600'>
-                  Hoàn tất
-                </Button>
-              </div>
-            </div>
+              </>
+            )}
           </Card>
         )}
       </div>
