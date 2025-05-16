@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Table, Tag, Button, Card, Pagination, message, Spin, Empty, Modal } from 'antd'

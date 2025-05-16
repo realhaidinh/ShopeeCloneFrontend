@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Form, Input, message, Steps, Card, Divider, Avatar, Collapse, List, Spin, Result } from 'antd'

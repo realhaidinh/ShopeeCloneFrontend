@@ -5,13 +5,13 @@ import type { MenuProps } from 'antd'
 import { DownOutlined, UserOutlined } from '@ant-design/icons'
 import { AppContext } from 'src/contexts/app.context'
 import { getRefreshTokenFromLS } from 'src/utils/auth'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import authApi from 'src/apis/auth.api'
 import { toast } from 'react-toastify'
-import { queryClient } from 'src/main'
 
 export default function NavHeader() {
   const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
+  const queryClient = useQueryClient()
   const logoutMutation = useMutation({
     mutationFn: (body: { refreshToken: string }) => authApi.logout(body),
     onSuccess: () => {

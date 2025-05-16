@@ -2,7 +2,7 @@
 
 import type React from 'react'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Rate, Spin } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -17,11 +17,11 @@ import { toast } from 'react-toastify'
 import type { StatisticTimerProps } from 'antd'
 import { Col, Row, Statistic } from 'antd'
 import { ClockCircleOutlined } from '@ant-design/icons'
-import { queryClient } from 'src/main'
 
 const { Timer } = Statistic
 
 export default function ProductDetail() {
+  const queryClient = useQueryClient()
   const { nameId } = useParams()
   const [deadline, setDeadline] = useState(Date.now() + 1000 * 60 * 60) // 1 phút
   const [buyCount, setBuyCount] = useState(1)

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, message } from 'antd'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import purchaseApi from 'src/apis/purchaseApi'
 import { formatCurrency, generateNameId } from 'src/utils/utils'

@@ -21,3 +21,15 @@ export interface User {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface UpdateProfileReqBody {
+  name: string
+  phoneNumber: string
+  avatar: string
+}
+
+export interface ChangePasswordReqBody {
+  password: string
+  newPassword: string
+  confirmNewPassword: string
+}
