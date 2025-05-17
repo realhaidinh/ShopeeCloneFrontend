@@ -17,6 +17,7 @@ import { toast } from 'react-toastify'
 import type { StatisticTimerProps } from 'antd'
 import { Col, Row, Statistic } from 'antd'
 import { ClockCircleOutlined } from '@ant-design/icons'
+import NotFound from 'src/pages/NotFound'
 
 const { Timer } = Statistic
 
@@ -362,7 +363,7 @@ export default function ProductDetail() {
     </div>
   ) : (
     <div className='container flex min-h-[300px] items-center justify-center'>
-      <Spin size='large' />
+      <NotFound />
     </div>
   )
 }

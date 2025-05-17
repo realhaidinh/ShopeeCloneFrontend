@@ -16,6 +16,7 @@ import CheckoutLayout from 'src/layouts/CheckoutLayout/CheckoutLayout'
 import OrderLayout from 'src/layouts/OrderLayout'
 import Order from 'src/pages/Order'
 import OrderDetail from 'src/pages/OrderDetail'
+import NotFound from 'src/pages/NotFound'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -62,6 +63,14 @@ export default function useRouteElements() {
       element: (
         <MainLayout>
           <ProductList />
+        </MainLayout>
+      )
+    },
+    {
+      path: '*',
+      element: (
+        <MainLayout>
+          <NotFound />
         </MainLayout>
       )
     },
