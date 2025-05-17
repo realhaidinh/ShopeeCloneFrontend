@@ -36,7 +36,11 @@ export default function Login() {
       onSuccess: (data) => {
         setIsAuthenticated(true)
         setProfile(data.data.data.user)
-        navigate('/')
+        if (data.data.data.user.roleId === 2) {
+          navigate('/')
+        } else {
+          navigate('/manage/profile')
+        }
         toast.success(data.data.message)
       },
       onError: (error) => {
@@ -59,7 +63,7 @@ export default function Login() {
       <div className='container'>
         <div className='grid grid-cols-1 py-12 lg:grid-cols-5 lg:py-32 lg:pr-10'>
           <div className='lg:col-span-2 lg:col-start-4'>
-            <form className='p-10 rounded bg-white shadow-sm' onSubmit={onSubmit} noValidate>
+            <form className='rounded bg-white p-10 shadow-sm' onSubmit={onSubmit} noValidate>
               <div className='text-2xl'>Đăng nhập</div>
               <Input
                 name='email'
@@ -81,14 +85,14 @@ export default function Login() {
               <div className='mt-2'>
                 <button
                   type='submit'
-                  className='flex items-center justify-center w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed'
+                  className='flex w-full items-center justify-center bg-red-500 py-4 px-2 text-center text-sm uppercase text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50'
                   disabled={loginMutation.isLoading}
                 >
                   {loginMutation.isLoading && <Spin indicator={<LoadingOutlined spin />} />}
                   <span className='ml-2'> Đăng nhập</span>
                 </button>
               </div>
-              <div className='flex items-center justify-center mt-8 gap-1'>
+              <div className='mt-8 flex items-center justify-center gap-1'>
                 <div className='text-gray-300'>Bạn chưa có tài khoản?</div>
                 <Link to='/register' className=' text-red-400'>
                   Đăng ký tài khoản mới

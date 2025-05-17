@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useRoutes } from 'react-router-dom'
+import { Link, Navigate, Outlet, useRoutes } from 'react-router-dom'
 import RegisterLayout from './layouts/RegisterLayout'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -17,10 +17,54 @@ import OrderLayout from 'src/layouts/OrderLayout'
 import Order from 'src/pages/Order'
 import OrderDetail from 'src/pages/OrderDetail'
 import NotFound from 'src/pages/NotFound'
+import ManageLayout from 'src/layouts/ManageLayout'
+import { Button, Result } from 'antd'
+import ProfileInfo from 'src/pages/Profile/ProfileInfo'
+import ManageProfile from 'src/pages/ManageProfile'
+import EditProfile from 'src/pages/ManageProfile/EditProfile'
+import ChangePassword from 'src/pages/ManageProfile/ChangePassword'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
   return isAuthenticated ? <Outlet /> : <Navigate to='/login' />
+}
+
+function AdminRoute() {
+  const { isAuthenticated, profile } = useContext(AppContext)
+  return isAuthenticated && profile && profile?.roleId === 1 ? (
+    <Outlet />
+  ) : (
+    <Result
+      status='403'
+      title='403'
+      subTitle='Sorry, you are not authorized to access this page.'
+      extra={
+        <Button>
+          <Link to='/'>Back to home page</Link>
+        </Button>
+      }
+    />
+  )
+}
+
+function ManageRoute() {
+  const { isAuthenticated, profile } = useContext(AppContext)
+  const allowedRoles = [1, 3] // Admin and Seller
+
+  return isAuthenticated && profile && allowedRoles.includes(profile.roleId) ? (
+    <Outlet />
+  ) : (
+    <Result
+      status='403'
+      title='403'
+      subTitle='Sorry, you are not authorized to access this page.'
+      extra={
+        <Button>
+          <Link to='/'>Back to home page</Link>
+        </Button>
+      }
+    />
+  )
 }
 
 function RejectedRoute() {
@@ -73,6 +117,115 @@ export default function useRouteElements() {
           <NotFound />
         </MainLayout>
       )
+    },
+    {
+      path: '/manage',
+      element: <ManageRoute />,
+      children: [
+        {
+          path: 'products',
+          element: (
+            <ManageLayout>
+              <div>Manage products</div>
+            </ManageLayout>
+          )
+        },
+        {
+          path: 'dashboard',
+          element: (
+            <ManageLayout>
+              <div>Dashboard</div>
+            </ManageLayout>
+          )
+        },
+        {
+          path: 'profile',
+          element: (
+            <ManageLayout>
+              <ManageProfile />
+            </ManageLayout>
+          )
+        },
+        {
+          path: 'profile/edit',
+          element: (
+            <ManageLayout>
+              <EditProfile />
+            </ManageLayout>
+          )
+        },
+        {
+          path: 'profile/change-password',
+          element: (
+            <ManageLayout>
+              <ChangePassword />
+            </ManageLayout>
+          )
+        },
+        {
+          path: 'orders',
+          element: (
+            <ManageLayout>
+              <div>Manage orders</div>
+            </ManageLayout>
+          )
+        },
+
+        // Group các route riêng cho Admin
+        {
+          element: <AdminRoute />,
+          children: [
+            {
+              path: 'brands',
+              element: (
+                <ManageLayout>
+                  <div>Brands Page</div>
+                </ManageLayout>
+              )
+            },
+            {
+              path: 'categories',
+              element: (
+                <ManageLayout>
+                  <div>Categories Page</div>
+                </ManageLayout>
+              )
+            },
+            {
+              path: 'roles',
+              element: (
+                <ManageLayout>
+                  <div>Roles Page</div>
+                </ManageLayout>
+              )
+            },
+            {
+              path: 'languages',
+              element: (
+                <ManageLayout>
+                  <div>Languages Page</div>
+                </ManageLayout>
+              )
+            },
+            {
+              path: 'users',
+              element: (
+                <ManageLayout>
+                  <div>Users Page</div>
+                </ManageLayout>
+              )
+            },
+            {
+              path: 'shops',
+              element: (
+                <ManageLayout>
+                  <div>Shops Page</div>
+                </ManageLayout>
+              )
+            }
+          ]
+        }
+      ]
     },
     {
       path: '',

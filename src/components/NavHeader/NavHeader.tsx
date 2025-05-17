@@ -34,17 +34,35 @@ export default function NavHeader() {
     {
       key: '2',
       label: <Link to='/orders'>Đơn mua</Link>
-    },
-    {
-      key: '3',
+    }
+  ]
+  if (profile?.roleId !== 2) {
+    items.push(
+      {
+        key: '3',
+        label: <Link to='/manage/profile'>Quản lí</Link>
+      },
+      {
+        key: '4',
+        label: (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+          <span onClick={handleLogout} className='block w-full cursor-pointer'>
+            Đăng xuất
+          </span>
+        )
+      }
+    )
+  } else {
+    items.push({
+      key: '4',
       label: (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <span onClick={handleLogout} className='block w-full cursor-pointer'>
           Đăng xuất
         </span>
       )
-    }
-  ]
+    })
+  }
   return (
     <div className='flex justify-end'>
       <div className='flex cursor-pointer items-center py-1'>
