@@ -27,6 +27,7 @@ import ManageProduct from 'src/pages/ManageProduct'
 import ManageOrder from 'src/pages/ManageOrder'
 import ManageBrand from 'src/pages/ManageBrand'
 import ManageUser from 'src/pages/ManageUser'
+import ManageLanguage from 'src/pages/ManageLanguage'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -223,7 +224,7 @@ export default function useRouteElements() {
               path: 'languages',
               element: (
                 <ManageLayout>
-                  <div>Languages Page</div>
+                  <ManageLanguage />
                 </ManageLayout>
               )
             },

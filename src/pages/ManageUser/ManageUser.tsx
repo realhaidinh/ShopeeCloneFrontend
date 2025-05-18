@@ -1,5 +1,3 @@
-'use client'
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Table, Space, Tag, message, Pagination } from 'antd'
 import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons'
