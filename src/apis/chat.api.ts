@@ -17,6 +17,12 @@ export interface MessagesResponse {
     page: number,
     limit?: number,
     totalPages: number
+    receiver: {
+        id: number,
+        name: string,
+        avatar: string,
+        email: string,
+    }
 }
 
 interface Params {
@@ -31,6 +37,9 @@ const chatApi = {
     return http.get<MessagesResponse>(URL, {
       params
     })
+  },
+  getReceivers: () => {
+    return http.get(`${URL}/receivers`)
   }
 }
 
