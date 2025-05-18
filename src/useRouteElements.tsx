@@ -25,6 +25,7 @@ import EditProfile from 'src/pages/ManageProfile/EditProfile'
 import ChangePassword from 'src/pages/ManageProfile/ChangePassword'
 import DashBoard from 'src/pages/DashBoard'
 import ManageProduct from 'src/pages/ManageProduct'
+import Chat from './pages/Chat'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -233,6 +234,14 @@ export default function useRouteElements() {
       path: '',
       element: <ProtectedRoute />,
       children: [
+        {
+          path: '/chat/:receiverId',
+          element: (
+            <MainLayout>
+              <Chat />
+            </MainLayout>
+          )
+        },
         {
           path: '/profile',
           element: (
