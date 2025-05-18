@@ -68,9 +68,7 @@ export default function ManageLayout({ children }: ManageLayoutProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
-            position: 'sticky',
-            top: 0
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)'
           }}
         >
           <Breadcrumb items={generateBreadcrumb()} />
