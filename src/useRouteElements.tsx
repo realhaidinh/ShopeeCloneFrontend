@@ -25,6 +25,8 @@ import ChangePassword from 'src/pages/ManageProfile/ChangePassword'
 import DashBoard from 'src/pages/DashBoard'
 import ManageProduct from 'src/pages/ManageProduct'
 import ManageOrder from 'src/pages/ManageOrder'
+import ManageBrand from 'src/pages/ManageBrand'
+import ManageUser from 'src/pages/ManageUser'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -197,7 +199,7 @@ export default function useRouteElements() {
               path: 'brands',
               element: (
                 <ManageLayout>
-                  <div>Brands Page</div>
+                  <ManageBrand />
                 </ManageLayout>
               )
             },
@@ -229,7 +231,7 @@ export default function useRouteElements() {
               path: 'users',
               element: (
                 <ManageLayout>
-                  <div>Users Page</div>
+                  <ManageUser />
                 </ManageLayout>
               )
             }

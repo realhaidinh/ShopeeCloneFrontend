@@ -3,8 +3,8 @@ import http from 'src/utils/http'
 
 const URL = 'brands'
 const brandApi = {
-  getBrands: () => {
-    return http.get<BrandListResponse>(URL)
+  getBrands: (params?: { page: number; limit: number }) => {
+    return http.get<BrandListResponse>(URL, { params })
   },
   getDetailBrand: (id: number) => {
     return http.get<Brand>(`${URL}/${id}`)
