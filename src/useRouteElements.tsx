@@ -19,13 +19,13 @@ import OrderDetail from 'src/pages/OrderDetail'
 import NotFound from 'src/pages/NotFound'
 import ManageLayout from 'src/layouts/ManageLayout'
 import { Button, Result } from 'antd'
-import ProfileInfo from 'src/pages/Profile/ProfileInfo'
 import ManageProfile from 'src/pages/ManageProfile'
 import EditProfile from 'src/pages/ManageProfile/EditProfile'
 import ChangePassword from 'src/pages/ManageProfile/ChangePassword'
 import DashBoard from 'src/pages/DashBoard'
 import ManageProduct from 'src/pages/ManageProduct'
 import Chat from './pages/Chat'
+import ManageOrder from 'src/pages/ManageOrder'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -134,6 +134,14 @@ export default function useRouteElements() {
           )
         },
         {
+          path: 'products/:id',
+          element: (
+            <ManageLayout>
+              <div>Product Detail</div>
+            </ManageLayout>
+          )
+        },
+        {
           path: 'dashboard',
           element: (
             <ManageLayout>
@@ -169,7 +177,15 @@ export default function useRouteElements() {
           path: 'orders',
           element: (
             <ManageLayout>
-              <div>Manage orders</div>
+              <ManageOrder />
+            </ManageLayout>
+          )
+        },
+        {
+          path: 'orders/:id',
+          element: (
+            <ManageLayout>
+              <div>Order Detail</div>
             </ManageLayout>
           )
         },
@@ -215,14 +231,6 @@ export default function useRouteElements() {
               element: (
                 <ManageLayout>
                   <div>Users Page</div>
-                </ManageLayout>
-              )
-            },
-            {
-              path: 'shops',
-              element: (
-                <ManageLayout>
-                  <div>Shops Page</div>
                 </ManageLayout>
               )
             }
