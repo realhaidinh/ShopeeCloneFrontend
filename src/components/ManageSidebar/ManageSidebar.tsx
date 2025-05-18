@@ -134,11 +134,6 @@ export default function ManageSidebar({ collapsed, onCollapse }: ManageSidebarPr
           ...(isAdmin
             ? [
                 {
-                  key: 'shops',
-                  icon: <ShopOutlined />,
-                  label: <Link to='/manage/shops'>Cửa hàng</Link>
-                },
-                {
                   key: 'settings',
                   icon: <SettingOutlined />,
                   label: 'Hệ thống',

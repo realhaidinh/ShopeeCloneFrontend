@@ -50,7 +50,7 @@ export default function ManageProduct() {
   })
 
   const handleViewProduct = (id: number) => {
-    navigate(`/products/${id}`)
+    navigate(`/manage/products/${id}`)
   }
 
   const handleSearch = (value: string) => {
