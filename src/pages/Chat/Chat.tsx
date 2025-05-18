@@ -14,7 +14,8 @@ export const Chat = () => {
     const [receivers, setReceivers] = useState<any[]>([])
     const [message, setMessage] = useState<string>('')
     const socketRef = useRef<Socket | null>(null)
-    const [currentReceiver, setCurrentReceiver] = useState<{id: number, avatar: string, name: string, email: string}>()
+    const messageEndRef = useRef<HTMLDivElement | null>(null);
+    const [currentReceiver, setCurrentReceiver] = useState<{ id: number, avatar: string, name: string, email: string }>()
     useEffect(() => {
         const fetchMessages = async () => {
             const result = await chatApi.getMessages({ fromUserId: (profile?.id) as number, toUserId: receiverId as string })
@@ -37,6 +38,10 @@ export const Chat = () => {
         }
     }, [receiverId])
 
+    useEffect(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
     const connectToWebSocket = () => {
         if (socketRef.current) {
             socketRef.current.disconnect()
@@ -51,7 +56,7 @@ export const Chat = () => {
                 authorization: `bearer ${accessToken}`
             }
         })
-
+        socket.emit('start-chat', { toUserId: Number(receiverId) })
         socket.on('connect', () => {
             console.log('WebSocket connected with ID:', socket.id)
         })
@@ -89,12 +94,12 @@ export const Chat = () => {
         navigate(`/chat/${id}`)
     }
     return (
-        <>
+        <div className="flex h-full">
             <ChatAside
                 receivers={receivers}
                 onSelectReceiver={setReceiver}
                 currentReceiver={receiverId} />
-            <div style={{ height: 500 }} className="max-w-md mx-auto border rounded-2xl shadow p-4 flex flex-col gap-4">
+            <div style={{ height: 500 }} className="w-max p-4 flex flex-1 flex-col gap-4">
                 <div>{currentReceiver && currentReceiver.name}</div>
                 <div className="flex-1 overflow-y-auto max-h-96 space-y-2">
                     {messages.map((msg, idx) => (
@@ -113,6 +118,7 @@ export const Chat = () => {
                             </div>
                         </div>
                     ))}
+                    <div ref={messageEndRef} />
                 </div>
 
                 <div className="flex gap-2">
@@ -132,6 +138,6 @@ export const Chat = () => {
                     </button>
                 </div>
             </div>
-        </>
+        </div>
     );
 }

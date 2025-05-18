@@ -28,6 +28,7 @@ import Chat from './pages/Chat'
 import ManageOrder from 'src/pages/ManageOrder'
 import ManageBrand from 'src/pages/ManageBrand'
 import ManageUser from 'src/pages/ManageUser'
+import ChatLayout from './layouts/ChatLayout'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -247,9 +248,9 @@ export default function useRouteElements() {
         {
           path: '/chat/:receiverId',
           element: (
-            <MainLayout>
+            <ChatLayout>
               <Chat />
-            </MainLayout>
+            </ChatLayout>
           )
         },
         {
