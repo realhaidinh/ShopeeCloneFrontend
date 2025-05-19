@@ -21,3 +21,22 @@ export interface RoleList {
   limit: number
   totalPages: number
 }
+
+//response Role type
+export interface CreateRoleReqBody {
+  name: string
+  description: string
+  isActive: boolean
+}
+
+//response Role type with permissions
+export interface UpdateRoleReqBody {
+  name: string
+  description: string
+  isActive: boolean
+  permissionIds: number[]
+}
+
+//delete response message
+
+//detail response Role with permissions
