@@ -29,6 +29,7 @@ import ManageBrand from 'src/pages/ManageBrand'
 import ManageUser from 'src/pages/ManageUser'
 import ManageLanguage from 'src/pages/ManageLanguage'
 import ManageRole from 'src/pages/ManageRole'
+import ManageCategory from 'src/pages/ManageCategory'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -209,7 +210,7 @@ export default function useRouteElements() {
               path: 'categories',
               element: (
                 <ManageLayout>
-                  <div>Categories Page</div>
+                  <ManageCategory />
                 </ManageLayout>
               )
             },
