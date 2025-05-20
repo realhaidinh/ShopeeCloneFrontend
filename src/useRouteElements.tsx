@@ -246,7 +246,7 @@ export default function useRouteElements() {
       element: <ProtectedRoute />,
       children: [
         {
-          path: '/chat/:receiverId',
+          path: '/chat/:userId',
           element: (
             <ChatLayout>
               <Chat />
