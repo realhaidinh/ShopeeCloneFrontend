@@ -5,19 +5,6 @@ export interface Variant {
   options: string[]
 }
 
-export interface Translation {
-  id: number
-  name: string
-  description: string
-  languageId: string
-  createdById: number
-  updatedById: number | null
-  deletedById: number | null
-  deletedAt: string | null
-  createdAt: string
-  updatedAt: string
-}
-
 export interface Sku {
   id: number
   value: string
@@ -130,7 +117,7 @@ export interface Product {
   deletedAt: string | null
   createdAt: string
   updatedAt: string
-  productTranslations: Translation[]
+  productTranslations: ProductTranslation[]
   skus: Sku[]
   categories: Category[]
   brand: Brand
@@ -158,4 +145,67 @@ export interface ProductListConfig {
   orderBy?: OrderBy // default: OrderBy.Desc
   sortBy?: SortBy // default: SortBy.CreatedAt
   lang?: string
+}
+
+export interface CreateProductReqBody {
+  name: string
+  publishedAt: string
+  basePrice: number
+  virtualPrice: number
+  brandId: number
+  images: string[]
+  variants: Variant[]
+  categories: number[]
+  skus: {
+    value: string
+    price: number
+    stock: number
+    image: string
+  }[]
+}
+
+export interface UpdateProductReqBody {
+  name: string
+  publishedAt: string
+  basePrice: number
+  virtualPrice: number
+  brandId: number
+  images: string[]
+  variants: Variant[]
+  categories: number[]
+  skus: {
+    id: number
+    value: string
+    price: number
+    stock: number
+    image: string
+  }[]
+}
+
+export interface ProductTranslation {
+  id: number
+  productId: number
+  name: string
+  description: string
+  languageId: string
+  createdById: number
+  updatedById: number | null
+  deletedById: number | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateProductTranslationReqBody {
+  name: string
+  description: string
+  productId: number
+  languageId: string
+}
+
+export interface UpdateProductTranslationReqBody {
+  name: string
+  description: string
+  productId: number
+  languageId: string
 }
