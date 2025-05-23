@@ -1,115 +1,210 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Empty, Image, Space, Spin, Table, Tooltip, Typography } from 'antd'
-import { useContext, useState } from 'react'
-import { createSearchParams, useNavigate } from 'react-router-dom'
+'use client'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Button, Table, Space, message, Pagination, Image, Input } from 'antd'
+import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { useState } from 'react'
+import type { Brand } from 'src/types/brand.type'
 import brandApi from 'src/apis/brand.api'
-import { AppContext } from 'src/contexts/app.context'
-import useQueryConfig, { QueryConfig } from 'src/hooks/useQueryConfig'
-import { Brand } from 'src/types/brand.type'
-const { Title, Text } = Typography
-import { EyeOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons'
-import { omit, orderBy } from 'lodash'
+import BrandDetail from './BrandDetail'
+import BrandForm from './BrandForm'
+import DeleteConfirmation from './DeleteConfirmation'
+import { formatDate } from 'src/utils/utils'
+
 export default function ManageBrand() {
-  const { profile } = useContext(AppContext)
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const queryConfig: QueryConfig = useQueryConfig()
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  // State for modals
+  const [isDetailVisible, setIsDetailVisible] = useState(false)
+  const [isFormVisible, setIsFormVisible] = useState(false)
+  const [isDeleteVisible, setIsDeleteVisible] = useState(false)
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Fetch brands
   const {
     data: brandsData,
     isLoading,
-    isError,
-    error
+    isError
   } = useQuery({
-    queryKey: ['brands'],
-    queryFn: () => brandApi.getBrands()
+    queryKey: ['brands', { page, limit: pageSize }],
+    queryFn: () => brandApi.getBrands({ page, limit: pageSize }),
+    keepPreviousData: true
   })
 
-  const columns = [
-    {
-      title: 'Logo',
-      dataIndex: 'logo',
-      key: 'logo',
-      render: (logo: string) => (
-        <Image
-          src={logo ? logo : '/placeholder-image.png'}
-          alt='logo'
-          width={80}
-          height={80}
-          style={{ objectFit: 'cover', borderRadius: '4px' }}
-          fallback='data:image/png;base64,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'
-        />
-      )
+  // Delete brand mutation
+  const deleteBrandMutation = useMutation({
+    mutationFn: (brandId: number) => brandApi.delete(brandId),
+    onSuccess: () => {
+      message.success('Brand deleted successfully')
+      queryClient.invalidateQueries(['brands'])
+      setIsDeleteVisible(false)
     },
+    onError: (error) => {
+      message.error('Failed to delete brand')
+      console.error(error)
+    }
+  })
+
+  // Handle pagination change
+  const handlePaginationChange = (page: number, pageSize: number) => {
+    setPage(page)
+    setPageSize(pageSize)
+  }
+
+  // Handle view brand details
+  const handleViewDetails = (brand: Brand) => {
+    setSelectedBrand(brand)
+    setIsDetailVisible(true)
+  }
+
+  // Handle create brand
+  const handleCreateBrand = () => {
+    setSelectedBrand(null)
+    setIsEditing(false)
+    setIsFormVisible(true)
+  }
+
+  // Handle edit brand
+  const handleEditBrand = (brand: Brand) => {
+    setSelectedBrand(brand)
+    setIsEditing(true)
+    setIsFormVisible(true)
+  }
+
+  // Handle delete brand
+  const handleDeleteBrand = (brand: Brand) => {
+    setSelectedBrand(brand)
+    setIsDeleteVisible(true)
+  }
+
+  // Handle search
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+    setPage(1) // Reset to first page when searching
+  }
+
+  // Filter brands based on search term
+  const filteredBrands = brandsData?.data.data.filter((brand) =>
+    brand.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Table columns
+  const columns = [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      render: (id: number) => <Text strong>{id}</Text>
+      width: 70
+    },
+    {
+      title: 'Logo',
+      dataIndex: 'logo',
+      key: 'logo',
+      width: 100,
+      render: (logo: string) => (
+        <Image
+          src={logo || '/placeholder.svg?height=40&width=40'}
+          alt='Brand Logo'
+          width={40}
+          height={40}
+          style={{ objectFit: 'cover', borderRadius: '4px' }}
+          fallback='/placeholder.svg?height=40&width=40'
+        />
+      )
     },
     {
       title: 'Name',
       dataIndex: 'name',
-      key: 'name',
-      render: (name: string) => <Text>{name}</Text>
+      key: 'name'
     },
-
     {
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (createdAt: string) => <Text>{new Date(createdAt).toLocaleDateString()}</Text>
+      render: (date: string) => formatDate(date)
     },
     {
-      title: 'Created By',
-      key: 'createdBy',
-      render: () => <Text>Admin</Text>
+      title: 'Updated At',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      render: (date: string) => formatDate(date)
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 120,
       render: (_: any, record: Brand) => (
-        <Space>
-          <Tooltip title='View Details'>
-            <Button shape='circle' icon={<EyeOutlined />} />
-          </Tooltip>
-          <Tooltip title='Delete'>
-            <Button danger shape='circle' icon={<DeleteOutlined />} />
-          </Tooltip>
+        <Space size='middle'>
+          <Button type='text' icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
+          <Button type='text' icon={<EditOutlined />} onClick={() => handleEditBrand(record)} />
+          <Button type='text' danger icon={<DeleteOutlined />} onClick={() => handleDeleteBrand(record)} />
         </Space>
       )
     }
   ]
 
   return (
-    <Card
-      title={<Title level={4}>Brand Management</Title>}
-      extra={
-        <Space>
-          <Button onClick={() => navigate('manage/brands/create')}>Add Brand</Button>
-        </Space>
-      }
-    >
-      {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '50px 0' }}>
-          <Spin size='large' />
-        </div>
-      ) : isError ? (
-        <Empty description='Error loading brands' image={Empty.PRESENTED_IMAGE_SIMPLE} />
-      ) : !brandsData || !brandsData.data || brandsData.data.totalItems === 0 ? (
-        <Empty description='No products found' image={Empty.PRESENTED_IMAGE_SIMPLE} />
-      ) : (
-        <>
-          <Table
-            dataSource={brandsData.data.data}
-            columns={columns}
-            rowKey='id'
-            pagination={false}
-            scroll={{ x: 1200 }}
-            bordered
-          />
-        </>
+    <div className='manage-brand-container'>
+      <div className='header-actions' style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+        <h2>Manage Brands</h2>
+        <Button icon={<PlusOutlined />} onClick={handleCreateBrand}>
+          Add Brand
+        </Button>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <Input
+          placeholder='Search brands'
+          prefix={<SearchOutlined />}
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{ width: 300 }}
+          allowClear
+        />
+      </div>
+
+      <Table dataSource={filteredBrands || []} columns={columns} rowKey='id' loading={isLoading} pagination={false} />
+
+      <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Pagination
+          current={page}
+          pageSize={pageSize}
+          total={brandsData?.data.totalItems || 0}
+          onChange={handlePaginationChange}
+          showSizeChanger
+          showTotal={(total) => `Total ${total} items`}
+        />
+      </div>
+
+      {/* Brand Detail Modal */}
+      {selectedBrand && (
+        <BrandDetail visible={isDetailVisible} brand={selectedBrand} onClose={() => setIsDetailVisible(false)} />
       )}
-    </Card>
+
+      {/* Brand Form Modal (Create/Update) */}
+      <BrandForm
+        visible={isFormVisible}
+        brand={selectedBrand}
+        isEditing={isEditing}
+        onClose={() => setIsFormVisible(false)}
+        onSuccess={() => {
+          setIsFormVisible(false)
+          queryClient.invalidateQueries(['brands'])
+        }}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {selectedBrand && (
+        <DeleteConfirmation
+          visible={isDeleteVisible}
+          brand={selectedBrand}
+          onCancel={() => setIsDeleteVisible(false)}
+          onConfirm={() => deleteBrandMutation.mutate(selectedBrand.id)}
+          isLoading={deleteBrandMutation.isLoading}
+        />
+      )}
+    </div>
   )
 }

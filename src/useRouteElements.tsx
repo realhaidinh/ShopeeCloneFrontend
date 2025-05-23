@@ -28,6 +28,9 @@ import Chat from './pages/Chat'
 import ManageOrder from 'src/pages/ManageOrder'
 import ManageBrand from 'src/pages/ManageBrand'
 import ManageUser from 'src/pages/ManageUser'
+import ManageLanguage from 'src/pages/ManageLanguage'
+import ManageRole from 'src/pages/ManageRole'
+import ManageCategory from 'src/pages/ManageCategory'
 import ChatLayout from './layouts/ChatLayout'
 import GoogleAuth from './pages/GoogleAuth'
 
@@ -210,7 +213,7 @@ export default function useRouteElements() {
               path: 'categories',
               element: (
                 <ManageLayout>
-                  <div>Categories Page</div>
+                  <ManageCategory />
                 </ManageLayout>
               )
             },
@@ -218,7 +221,7 @@ export default function useRouteElements() {
               path: 'roles',
               element: (
                 <ManageLayout>
-                  <div>Roles Page</div>
+                  <ManageRole />
                 </ManageLayout>
               )
             },
@@ -226,7 +229,7 @@ export default function useRouteElements() {
               path: 'languages',
               element: (
                 <ManageLayout>
-                  <div>Languages Page</div>
+                  <ManageLanguage />
                 </ManageLayout>
               )
             },

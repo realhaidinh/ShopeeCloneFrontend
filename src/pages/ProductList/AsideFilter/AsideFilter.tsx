@@ -99,7 +99,7 @@ export default function AsideFilter({ queryConfig, categoryData, parentCategoryD
     setMaxPrice(0)
     setSelectedBrands([])
     navigate({
-      pathname: `/categories/${categoryParentId}`,
+      pathname: `${categoryParentId ? `/categories/${categoryParentId}` : '/search'}`,
       search: createSearchParams(omit(queryConfig, ['minPrice', 'maxPrice', 'brandIds', 'categories'])).toString()
     })
   }
