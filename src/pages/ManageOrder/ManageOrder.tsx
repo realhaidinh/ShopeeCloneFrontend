@@ -1,14 +1,18 @@
+'use client'
+
 import { useContext, useState } from 'react'
 import { createSearchParams, useNavigate } from 'react-router-dom'
-import { Table, Tag, Button, Card, Pagination, message, Spin, Empty, Modal } from 'antd'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { EyeOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { Table, Tag, Button, Card, Spin, Empty, Modal } from 'antd'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { formatCurrency } from 'src/utils/utils'
-import type { ListOrder } from 'src/types/purchase.type'
 import { manageOrderApi } from 'src/apis/manageOrders.api'
 import { AppContext } from 'src/contexts/app.context'
-import useQueryConfig, { QueryConfig } from 'src/hooks/useQueryConfig'
+import useQueryConfig, { type QueryConfig } from 'src/hooks/useQueryConfig'
 import { omit } from 'lodash'
+import type { ListOrder } from 'src/types/order.type' // Use order.type consistently
+import DetailOrder from 'src/pages/ManageOrder/DetailOrder'
+import CancelOrder from 'src/pages/ManageOrder/CancelOrder'
 
 export default function ManageOrder() {
   const { profile } = useContext(AppContext)
@@ -17,6 +21,8 @@ export default function ManageOrder() {
   const queryConfig: QueryConfig = useQueryConfig()
   const [page, setPage] = useState(Number(queryConfig.page) || 1)
   const [pageSize, setPageSize] = useState(Number(queryConfig.limit) || 10)
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false)
 
   const {
     data: ordersData,
@@ -28,38 +34,16 @@ export default function ManageOrder() {
     queryFn: () => manageOrderApi.getListOrders({ page, limit: pageSize })
   })
 
-  // Cancel order mutation
-  // const cancelOrderMutation = useMutation({
-  //   mutationFn: (orderId: number) => manageOrderApi.cancelOrder(orderId),
-  //   onSuccess: () => {
-  //     message.success('Đã hủy đơn hàng thành công')
-  //     queryClient.invalidateQueries({ queryKey: ['orders'] })
-  //   },
-  //   onError: (error) => {
-  //     message.error('Không thể hủy đơn hàng. Vui lòng thử lại sau.')
-  //     console.error('Error canceling order:', error)
-  //   }
-  // })
-
   // Handle view order details
   const handleViewOrder = (orderId: number) => {
-    navigate(`/manage/orders/${orderId}`)
+    setSelectedOrderId(orderId)
+    setIsDetailModalVisible(true)
   }
 
-  // Handle cancel order
-  // const showCancelConfirm = (order: ListOrder) => {
-  //   confirm({
-  //     title: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
-  //     icon: <ExclamationCircleOutlined />,
-  //     content: 'Đơn hàng sẽ bị hủy và không thể khôi phục.',
-  //     okText: 'Hủy đơn hàng',
-  //     okType: 'danger',
-  //     cancelText: 'Không',
-  //     onOk() {
-  //       cancelOrderMutation.mutate(order.id)
-  //     }
-  //   })
-  // }
+  // Handle close detail modal
+  const handleCloseDetailModal = () => {
+    setIsDetailModalVisible(false)
+  }
 
   // Calculate total price for an order
   const calculateOrderTotal = (order: ListOrder) => {
@@ -155,8 +139,8 @@ export default function ManageOrder() {
       render: (_: any, record: ListOrder) => (
         <div className='flex space-x-2'>
           <Button
-            type='primary'
             icon={<EyeOutlined />}
+            type='primary'
             size='small'
             onClick={() => handleViewOrder(record.id)}
             className='bg-blue-500 hover:bg-blue-600'
@@ -164,9 +148,9 @@ export default function ManageOrder() {
             Chi tiết
           </Button>
           {record.status === 'PENDING_PAYMENT' && (
-            <Button danger icon={<DeleteOutlined />} size='small'>
-              Hủy
-            </Button>
+            <CancelOrder
+              order={record as any} // Use type assertion as a temporary fix
+            />
           )}
         </div>
       )
@@ -236,6 +220,51 @@ export default function ManageOrder() {
           <Empty description='Bạn chưa có đơn hàng nào' image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      {/* Order Detail Modal */}
+      {selectedOrderId && (
+        <Modal
+          title={`Chi tiết đơn hàng #${selectedOrderId}`}
+          open={isDetailModalVisible}
+          onCancel={handleCloseDetailModal}
+          width={1000}
+          footer={null}
+        >
+          <OrderDetailContent orderId={selectedOrderId} />
+        </Modal>
+      )}
     </div>
   )
+}
+
+// Component to display order details inside modal
+function OrderDetailContent({ orderId }: { orderId: number }) {
+  const {
+    data: orderData,
+    isLoading,
+    isError
+  } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: () => manageOrderApi.getDetailOrder(orderId),
+    enabled: !!orderId
+  })
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center py-8'>
+        <Spin size='large' tip='Đang tải thông tin đơn hàng...' />
+      </div>
+    )
+  }
+
+  if (isError || !orderData?.data) {
+    return (
+      <div className='py-4 text-center'>
+        <ExclamationCircleOutlined className='mb-2 text-3xl text-red-500' />
+        <p>Không thể tải thông tin đơn hàng. Vui lòng thử lại sau.</p>
+      </div>
+    )
+  }
+
+  return <DetailOrder order={orderData.data} />
 }

@@ -12,6 +12,20 @@ export interface BrandTranslation {
   updatedAt: string
 }
 
+export interface CreateBrandTranslationReqBody {
+  brandId: number
+  languageId: string
+  name: string
+  description: string
+}
+
+export interface UpdateBrandTranslationReqBody {
+  brandId: number
+  languageId: string
+  name: string
+  description: string
+}
+
 export interface Brand {
   id: number
   name: string
@@ -31,4 +45,14 @@ export interface BrandListResponse {
   page: number
   limit: number
   totalPages: number
+}
+
+export interface CreateBrandReqBody {
+  name: string
+  logo: string
+}
+
+export interface UpdateBrandReqBody {
+  name: string
+  logo: string
 }

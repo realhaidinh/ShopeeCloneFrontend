@@ -5,3 +5,11 @@ export interface Permission {
   path: string
   method: string
 }
+
+export interface PermissionList {
+  data: Permission[]
+  totalItems: number
+  page: number
+  limit: number
+  totalPages: number
+}
