@@ -18,8 +18,10 @@ type FormData = Pick<Schema, 'email' | 'password'>
 
 export default function Login() {
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
-  const handleGoogleLogin = async () => {
-    const response = await http.get(`${process.env.VITE_API_URL}/google-link`)
+  const handleGoogleLogin = async (e: any) => {
+    e.preventDefault()
+    const response = await http.get(`/auth/google-link`)
+    console.log(response.data.url)
     window.location.href = response.data.url
   }
   const navigate = useNavigate()
@@ -105,22 +107,22 @@ export default function Login() {
                 <button
                   onClick={handleGoogleLogin}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    backgroundColor: "#fff",
-                    color: "#000",
-                    padding: "10px 20px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    fontSize: "16px",
-                    cursor: "pointer",
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    backgroundColor: '#fff',
+                    color: '#000',
+                    padding: '10px 20px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    fontSize: '16px',
+                    cursor: 'pointer'
                   }}
                 >
                   <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google icon"
-                    style={{ width: "20px", height: "20px" }}
+                    src='https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'
+                    alt='Google icon'
+                    style={{ width: '20px', height: '20px' }}
                   />
                   Đăng nhập với Google
                 </button>

@@ -94,6 +94,10 @@ export default function useRouteElements() {
       )
     },
     {
+      path: '/google-oauth',
+      element: <GoogleAuth />
+    },
+    {
       path: '/products/:nameId',
       index: true,
       element: (
@@ -318,13 +322,7 @@ export default function useRouteElements() {
               <Register />
             </RegisterLayout>
           )
-        },
-        {
-          path: '/google-oauth',
-          element: (
-            <GoogleAuth />
-          )
-        },
+        }
       ]
     }
   ])
