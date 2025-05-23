@@ -12,11 +12,16 @@ import { schema, Schema } from 'src/utils/rules'
 import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import { LoadingOutlined } from '@ant-design/icons'
 import { toast } from 'react-toastify'
+import http from 'src/utils/http'
 
 type FormData = Pick<Schema, 'email' | 'password'>
 
 export default function Login() {
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
+  const handleGoogleLogin = async () => {
+    const response = await http.get(`${process.env.VITE_API_URL}/google-link`)
+    window.location.href = response.data.url
+  }
   const navigate = useNavigate()
   const {
     register,
@@ -97,6 +102,28 @@ export default function Login() {
                 <Link to='/register' className=' text-red-400'>
                   Đăng ký tài khoản mới
                 </Link>
+                <button
+                  onClick={handleGoogleLogin}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    backgroundColor: "#fff",
+                    color: "#000",
+                    padding: "10px 20px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google icon"
+                    style={{ width: "20px", height: "20px" }}
+                  />
+                  Đăng nhập với Google
+                </button>
               </div>
             </form>
           </div>

@@ -29,6 +29,7 @@ import ManageOrder from 'src/pages/ManageOrder'
 import ManageBrand from 'src/pages/ManageBrand'
 import ManageUser from 'src/pages/ManageUser'
 import ChatLayout from './layouts/ChatLayout'
+import GoogleAuth from './pages/GoogleAuth'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -314,7 +315,13 @@ export default function useRouteElements() {
               <Register />
             </RegisterLayout>
           )
-        }
+        },
+        {
+          path: '/google-oauth',
+          element: (
+            <GoogleAuth />
+          )
+        },
       ]
     }
   ])
