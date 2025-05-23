@@ -99,11 +99,13 @@ export default function Login() {
                   <span className='ml-2'> Đăng nhập</span>
                 </button>
               </div>
-              <div className='mt-8 flex items-center justify-center gap-1'>
-                <div className='text-gray-300'>Bạn chưa có tài khoản?</div>
-                <Link to='/register' className=' text-red-400'>
-                  Đăng ký tài khoản mới
-                </Link>
+              <div className='mt-8 flex flex-col items-center justify-center gap-1'>
+                <div className='mb-5 flex items-center gap-4'>
+                  <div className='text-gray-300'>Bạn chưa có tài khoản?</div>
+                  <Link to='/register' className=' text-red-400'>
+                    Đăng ký tài khoản mới
+                  </Link>
+                </div>
                 <button
                   onClick={handleGoogleLogin}
                   style={{

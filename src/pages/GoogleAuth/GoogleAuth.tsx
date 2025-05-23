@@ -1,9 +1,10 @@
 import { useMutation } from '@tanstack/react-query'
-import { get } from 'lodash'
+import { get, set } from 'lodash'
 import { useContext, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import profileApi from 'src/apis/profile.api'
 import { AppContext } from 'src/contexts/app.context'
+import { setProfileToLS } from 'src/utils/auth'
 export default function GoogleAuth() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -23,8 +24,9 @@ export default function GoogleAuth() {
         onSuccess: (data) => {
           setIsAuthenticated(true)
           console.log(data.data)
+          setProfileToLS(data.data)
           setProfile(data.data)
-          if (data.data.roleId === 2 || data.data.roleId === 1) {
+          if (data.data.roleId === 3 || data.data.roleId === 1) {
             navigate('/manage/profile')
           } else {
             navigate('/')
