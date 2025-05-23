@@ -32,6 +32,7 @@ import ManageLanguage from 'src/pages/ManageLanguage'
 import ManageRole from 'src/pages/ManageRole'
 import ManageCategory from 'src/pages/ManageCategory'
 import ChatLayout from './layouts/ChatLayout'
+import GoogleAuth from './pages/GoogleAuth'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -317,7 +318,13 @@ export default function useRouteElements() {
               <Register />
             </RegisterLayout>
           )
-        }
+        },
+        {
+          path: '/google-oauth',
+          element: (
+            <GoogleAuth />
+          )
+        },
       ]
     }
   ])
