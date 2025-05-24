@@ -188,15 +188,6 @@ export default function ManageSidebar({ collapsed, onCollapse }: ManageSidebarPr
                 label: <Link to='/manage/profile/change-password'>Đổi mật khẩu</Link>
               }
             ]
-          },
-          {
-            key: 'logout',
-            icon: <LogoutOutlined />,
-            label: 'Đăng xuất',
-            onClick: () => {
-              // Handle logout logic here
-              // navigate('/login')
-            }
           }
         ]}
       />

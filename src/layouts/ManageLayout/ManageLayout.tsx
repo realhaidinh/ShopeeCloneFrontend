@@ -1,10 +1,12 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 'use client'
 
 import type React from 'react'
 
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { Layout, Breadcrumb, Button, theme, Dropdown, Badge, Avatar } from 'antd'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   BellOutlined,
   UserOutlined,
@@ -14,6 +16,11 @@ import {
   QuestionCircleOutlined
 } from '@ant-design/icons'
 import ManageSidebar from 'src/components/ManageSidebar'
+import { AppContext } from 'src/contexts/app.context'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import authApi from 'src/apis/auth.api'
+import { toast } from 'react-toastify'
+import { clearLocalStorage, getRefreshTokenFromLS } from 'src/utils/auth'
 
 const { Header, Content, Footer } = Layout
 
@@ -22,6 +29,24 @@ interface ManageLayoutProps {
 }
 
 export default function ManageLayout({ children }: ManageLayoutProps) {
+  const navigate = useNavigate()
+  const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
+  const queryClient = useQueryClient()
+  const logoutMutation = useMutation({
+    mutationFn: (body: { refreshToken: string }) => authApi.logout(body),
+    onSuccess: () => {
+      setIsAuthenticated(false)
+      setProfile(null)
+      clearLocalStorage()
+      toast.success('Logout successfully')
+      navigate('/')
+    }
+  })
+  const handleLogout = () => {
+    console.log('Logout')
+    const refreshToken = getRefreshTokenFromLS()
+    logoutMutation.mutate({ refreshToken })
+  }
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
   const {
@@ -136,7 +161,12 @@ export default function ManageLayout({ children }: ManageLayoutProps) {
                     icon: <LogoutOutlined />,
                     label: 'Đăng xuất'
                   }
-                ]
+                ],
+                onClick: ({ key }) => {
+                  if (key === '3') {
+                    handleLogout()
+                  }
+                }
               }}
               placement='bottomRight'
               arrow

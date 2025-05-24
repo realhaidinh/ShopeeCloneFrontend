@@ -1,6 +1,7 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Carousel, Divider, Empty, Spin } from 'antd'
 import { useEffect, useRef } from 'react'
+import brandApi from 'src/apis/brand.api'
 import productApi from 'src/apis/product.api'
 import Category from 'src/pages/HomePage/Category'
 import Product from 'src/pages/ProductList/Product'
@@ -19,6 +20,12 @@ export default function HomePage() {
   })
 
   const observerRef = useRef<HTMLDivElement>(null)
+
+  const { data: brandsData, isError } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandApi.getBrands({ page: 1, limit: 10000 }),
+    keepPreviousData: true
+  })
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -73,6 +80,26 @@ export default function HomePage() {
       <div className='container my-5'>
         <Category />
       </div>
+
+      {/* Thương hiệu */}
+      {brandsData && !isError && (
+        <div className='container my-5 px-8'>
+          <Divider />
+          <div className='my-6 text-lg font-semibold uppercase text-gray-700'>Thương hiệu</div>
+          <div className='grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'>
+            {brandsData.data.data.map((brand) => (
+              <div key={brand.id} className='col-span-1'>
+                <div className='group flex flex-col items-center justify-center rounded-md border border-gray-200 bg-white p-4 shadow '>
+                  <img src={brand.logo} alt={brand.name} className='mb-2 h-16 w-16 object-contain' />
+                  <div className='text-center text-sm font-medium text-gray-700 group-hover:text-orange'>
+                    {brand.name}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Sản phẩm */}
       <div className='container my-5 px-8'>
