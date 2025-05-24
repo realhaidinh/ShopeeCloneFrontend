@@ -53,6 +53,9 @@ export default function ProfileInfo({ user, onEdit }: ProfileInfoProps) {
               <Descriptions.Item label='Ngày tạo tài khoản' span={2}>
                 {new Date(user.createdAt).toLocaleDateString('vi-VN')}
               </Descriptions.Item>
+              <Descriptions.Item label='Bảo mật 2 lớp' span={2}>
+                {!!user.totpSecret ? 'Đang bật' : 'Đang tắt'}
+              </Descriptions.Item>
             </Descriptions>
           </div>
         </div>
