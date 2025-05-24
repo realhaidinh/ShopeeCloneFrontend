@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
-import { Spin } from 'antd'
+import { Divider, Spin } from 'antd'
 import { useContext } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
@@ -99,6 +99,12 @@ export default function Login() {
                   <span className='ml-2'> Đăng nhập</span>
                 </button>
               </div>
+              <div className='mt-5 flex justify-start'>
+                <Link to='/forgot-password' className=' text-red-400'>
+                  Quên mật khẩu?
+                </Link>
+              </div>
+              <Divider />
               <div className='mt-8 flex flex-col items-center justify-center gap-1'>
                 <div className='mb-5 flex items-center gap-4'>
                   <div className='text-gray-300'>Bạn chưa có tài khoản?</div>

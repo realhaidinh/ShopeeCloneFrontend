@@ -16,7 +16,7 @@ interface Props {
 
 export default function EmailOtp({ email, setEmail, setCurrent, setValue }: Props) {
   const sendOtpMutation = useMutation({
-    mutationFn: authApi.sendOTPRegister,
+    mutationFn: authApi.sendOTP,
     onSuccess: () => {
       message.success('Đã gửi mã OTP về email')
       setCurrent(1)
@@ -43,7 +43,7 @@ export default function EmailOtp({ email, setEmail, setCurrent, setValue }: Prop
     sendOtpMutation.mutate({ email, type: VerificationCode.REGISTER })
   }
   return (
-    <div className='flex mt-5 items-center gap-2'>
+    <div className='mt-5 flex items-center gap-2'>
       <Input
         value={email}
         onChange={(e) => {

@@ -13,3 +13,10 @@ export type LoginResponse = {
     user: Omit<User, 'password' | 'totpSecret'>
   }
 }
+
+export type forgotPasswordReqBody = {
+  email: string
+  code: string
+  newPassword: string
+  confirmNewPassword: string
+}

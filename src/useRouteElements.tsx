@@ -33,6 +33,7 @@ import ManageRole from 'src/pages/ManageRole'
 import ManageCategory from 'src/pages/ManageCategory'
 import ChatLayout from './layouts/ChatLayout'
 import GoogleAuth from './pages/GoogleAuth'
+import ForgotPassword from 'src/pages/ForgotPassword'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -320,6 +321,14 @@ export default function useRouteElements() {
           element: (
             <RegisterLayout>
               <Register />
+            </RegisterLayout>
+          )
+        },
+        {
+          path: '/forgot-password',
+          element: (
+            <RegisterLayout>
+              <ForgotPassword />
             </RegisterLayout>
           )
         }

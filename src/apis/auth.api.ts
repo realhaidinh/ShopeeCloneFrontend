@@ -1,9 +1,9 @@
 import { TypeOfVerificationCodeType } from 'src/constants/auth.constant'
-import { AuthResponse, LoginResponse } from 'src/types/auth.type'
+import { AuthResponse, forgotPasswordReqBody, LoginResponse } from 'src/types/auth.type'
 import http from 'src/utils/http'
 
 const authApi = {
-  sendOTPRegister(body: { email: string; type: TypeOfVerificationCodeType }) {
+  sendOTP(body: { email: string; type: TypeOfVerificationCodeType }) {
     return http.post('/auth/otp', body)
   },
 
@@ -17,6 +17,9 @@ const authApi = {
 
   logout(body: { refreshToken: string }) {
     return http.post('/auth/logout', body)
+  },
+  forgotPassword(body: forgotPasswordReqBody) {
+    return http.post<{ message: string }>('/auth/forgot-password', body)
   }
 }
 
