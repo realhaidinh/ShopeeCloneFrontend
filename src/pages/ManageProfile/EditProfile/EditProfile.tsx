@@ -6,6 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import profileApi from 'src/apis/profile.api'
 import { UpdateProfileReqBody, User } from 'src/types/user.type'
 import { UploadOutlined, UserOutlined, LoadingOutlined } from '@ant-design/icons'
+import authApi from 'src/apis/auth.api'
+import { VerificationCode } from 'src/constants/auth.constant'
+import { QRCodeCanvas } from 'qrcode.react'
+import Toggle2FA from 'src/components/Toggle2FA'
 export default function EditProfile() {
   const navigate = useNavigate()
   const { data: profileData, isLoading: isLoadingProfile } = useQuery({
@@ -18,7 +22,7 @@ export default function EditProfile() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatar || null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-
+  
   const queryClient = useQueryClient()
   const updateProfileMutation = useMutation({
     mutationFn: (data: UpdateProfileReqBody) => profileApi.updateProfile(data),
@@ -188,6 +192,7 @@ export default function EditProfile() {
                 </Button>
               </div>
             </Form>
+            <Toggle2FA user={user} queryClient={queryClient} />
           </Card>
         </div>
       )}
