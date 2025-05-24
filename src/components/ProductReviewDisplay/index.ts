@@ -1,0 +1,3 @@
+import ProductReviewDisplay from 'src/components/ProductReviewDisplay/ProductReviewDisplay'
+
+export default ProductReviewDisplay

@@ -1,5 +1,4 @@
 import { Product, ProductList, ProductListConfig } from 'src/types/product.type'
-import { NotFoundApi } from 'src/types/utils.type'
 import http from 'src/utils/http'
 
 const URL = 'products'

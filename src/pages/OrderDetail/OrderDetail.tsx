@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
@@ -42,6 +40,7 @@ import purchaseApi from 'src/apis/purchaseApi'
 import { formatCurrency } from 'src/utils/utils'
 import io, { type Socket } from 'socket.io-client'
 import { getAccessTokenFromLS } from 'src/utils/auth'
+import ProductReviewSection from 'src/components/ProductReviewSection'
 
 const { confirm } = Modal
 const { Step } = Steps
@@ -53,7 +52,7 @@ interface PaymentStatus {
   message?: string
 }
 
-export default function OrderDetail() {
+export default function OrderDetailWithReviews() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -143,9 +142,6 @@ export default function OrderDetail() {
 
       // Switch back to the "Chi tiết đơn hàng" tab
       setActiveTab('1')
-
-      // Don't navigate away from the page
-      // navigate("/orders") - REMOVED
     },
     onError: (error) => {
       message.error('Không thể hủy tất cả đơn hàng. Vui lòng thử lại sau.')
@@ -821,6 +817,16 @@ export default function OrderDetail() {
                   </div>
                 </div>
               </Card>
+
+              {/* Add Review Section for DELIVERED orders */}
+              {order.status === 'DELIVERED' && (
+                <ProductReviewSection
+                  orderId={order.id}
+                  orderStatus={order.status}
+                  products={order.items || []}
+                  userId={order.userId || 1} // You might need to get this from auth context
+                />
+              )}
             </TabPane>
 
             <TabPane tab='Lịch sử đơn hàng' key='2'>

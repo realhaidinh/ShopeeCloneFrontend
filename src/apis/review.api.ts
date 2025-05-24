@@ -11,7 +11,7 @@ const URL = 'reviews'
 
 const reviewApi = {
   getList: (productId: number, params: { page: number; limit: number }) => {
-    return http.get<ListReview>(`URL/products/${productId}`, { params })
+    return http.get<ListReview>(`${URL}/products/${productId}`, { params })
   },
   create: (body: CreateReviewReqBody) => {
     return http.post<CreateReviewResBody>(URL, body)

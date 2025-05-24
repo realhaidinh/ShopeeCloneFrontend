@@ -1,0 +1,3 @@
+import ProductReviewSection from 'src/components/ProductReviewSection/ProductReviewSection'
+
+export default ProductReviewSection

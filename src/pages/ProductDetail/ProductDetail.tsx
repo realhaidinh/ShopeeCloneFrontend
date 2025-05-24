@@ -15,9 +15,8 @@ import { formatCurrency, formatDate, formatNumberToSocialStyle, getIdFromNameId,
 import purchaseApi from 'src/apis/purchaseApi'
 import { toast } from 'react-toastify'
 import type { StatisticTimerProps } from 'antd'
-import { Col, Row, Statistic } from 'antd'
+import { Statistic } from 'antd'
 import { ClockCircleOutlined } from '@ant-design/icons'
-import NotFound from 'src/pages/NotFound'
 import userApi from 'src/apis/user.api'
 
 import {
@@ -25,10 +24,10 @@ import {
   PhoneOutlined,
   MailOutlined,
   MessageOutlined,
-  PlusOutlined,
   ShopOutlined,
   CalendarOutlined
 } from '@ant-design/icons'
+import ProductReviewList from 'src/pages/ProductDetail/ProductReviewList'
 
 const { Timer } = Statistic
 
@@ -59,6 +58,7 @@ export default function ProductDetail() {
     keepPreviousData: true,
     staleTime: 3 * 60 * 1000
   })
+
   // Set default selected SKU when product data is loaded
   useEffect(() => {
     if (product && product.data.skus.length > 0) {
@@ -468,6 +468,16 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Product Reviews Section */}
+      <div className='container'>
+        <ProductReviewList
+          productId={product.data.id}
+          productName={product.data.productTranslations[0]?.name || 'Product Name'}
+          productImage={product.data.images[0] || '/placeholder.svg'}
+          currentUserId={1} // You should get this from your auth context
+        />
       </div>
 
       <div className='mt-8'>
