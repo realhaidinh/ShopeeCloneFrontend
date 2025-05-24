@@ -11,7 +11,7 @@ const authApi = {
     return http.post<AuthResponse>('/auth/register', body)
   },
 
-  login(body: { email: string; password: string }) {
+  login(body: { email: string; password: string, totpCode?: string, code?: string }) {
     return http.post<LoginResponse>('/auth/login', body)
   },
 

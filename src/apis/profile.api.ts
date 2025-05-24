@@ -23,6 +23,14 @@ const profileApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
+  },
+  setup2fa() {
+    return http.post('/auth/2fa/setup')
+  },
+  disable2fa(code: string) {
+    return http.post('/auth/2fa/disable', {
+      code: code
+    })
   }
 }
 

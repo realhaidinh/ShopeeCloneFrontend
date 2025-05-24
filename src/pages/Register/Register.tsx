@@ -11,6 +11,7 @@ import { Button, message, Steps, Spin } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import EmailOtp from 'src/components/Others'
+import { VerificationCode } from 'src/constants/auth.constant'
 
 type FormData = Schema
 export default function Register() {
@@ -84,7 +85,7 @@ export default function Register() {
               />
               {current === 0 && (
                 <>
-                  <EmailOtp email={email} setEmail={setEmail} setCurrent={setCurrent} setValue={setValue} />
+                  <EmailOtp email={email} setEmail={setEmail} setCurrent={setCurrent} setValue={setValue} type={VerificationCode.REGISTER} />
                 </>
               )}
               {current === 1 && (

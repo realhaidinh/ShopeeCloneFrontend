@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
-import { Divider, Spin } from 'antd'
-import { useContext } from 'react'
+import { Button, Divider, Spin, message } from 'antd'
+import { useContext, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import authApi from 'src/apis/auth.api'
@@ -13,15 +13,23 @@ import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import { LoadingOutlined } from '@ant-design/icons'
 import { toast } from 'react-toastify'
 import http from 'src/utils/http'
+import { VerificationCode } from 'src/constants/auth.constant'
+import * as yup from 'yup'
 
-type FormData = Pick<Schema, 'email' | 'password'>
-
+type FormData = {
+  email: string,
+  password: string,
+  totpCode?: string,
+  code?: string,
+}
+function getCodeKey(type: string) : string {
+  return type === 'otp' ? 'code' : 'totpCode'
+}
 export default function Login() {
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
   const handleGoogleLogin = async (e: any) => {
     e.preventDefault()
     const response = await http.get(`/auth/google-link`)
-    console.log(response.data.url)
     window.location.href = response.data.url
   }
   const navigate = useNavigate()
@@ -31,14 +39,36 @@ export default function Login() {
     setError,
     formState: { errors }
   } = useForm<FormData>({
-    resolver: yupResolver(schema.pick(['email', 'password']))
+    resolver: yupResolver(schema.shape(
+      { code: yup.string().optional(), totpCode: yup.string().optional() }
+    ).pick(['email', 'password', 'code', 'totpCode']))
+  })
+  const [auth, setAuth] = useState({ enable: false, type: 'otp', code: '' })
+  const [email, setEmail] = useState('')
+  const loginMutation = useMutation({
+    mutationFn: (body: FormData) => {
+      if(auth.enable) {
+        body = {...body, [getCodeKey(auth.type)]: auth.code}
+      }
+      return authApi.login(body)
+    }
+  })
+  const sendOtpMutation = useMutation({
+    mutationFn: authApi.sendOTP,
+    onSuccess: () => {
+      message.success('Đã gửi mã OTP về email')
+    },
+    onError: () => {
+      message.error('Gửi OTP thất bại. Vui lòng thử lại!')
+    }
   })
 
-  const loginMutation = useMutation({
-    mutationFn: (body: FormData) => authApi.login(body)
-  })
+  const handleSendOtp = () => {
+    sendOtpMutation.mutate({ email, type: VerificationCode.LOGIN })
+  }
   const onSubmit = handleSubmit((data) => {
     const body = data
+    setEmail(body.email)
     loginMutation.mutate(body, {
       onSuccess: (data) => {
         setIsAuthenticated(true)
@@ -54,6 +84,9 @@ export default function Login() {
         if (isAxiosUnprocessableEntityError<ResponseUnprocessableEntityApi<FormData>>(error)) {
           const formError = error.response?.data.message
           if (formError) {
+            if (formError.find((err) => err.message === 'Error.InvalidTOTPAndCode')) {
+              setAuth({ ...auth, enable: true })
+            }
             formError.forEach((err) => {
               setError(err.path, {
                 message: err.message,
@@ -89,6 +122,44 @@ export default function Login() {
                 placeholder='Password'
                 autoComplete='on'
               />
+              {auth.enable && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Code Type</label>
+                    <select
+                      className="w-full border rounded-xl p-2"
+                      value={auth.type}
+                      onChange={(e) => {
+                        setAuth({ ...auth, type: e.target.value });
+                      }}
+                    >
+                      <option value="otp">OTP</option>
+                      <option value="2fa">2FA</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      {auth.type === "2fa" ? "2FA Code" : "OTP Code"}
+                    </label>
+                    <input
+                      type="text"
+                      name={auth.type === '2fa' ? 'totpCode' : 'code'}
+                      className="w-full border rounded-xl p-2"
+                      value={auth.code}
+                      onChange={(e) => setAuth({ ...auth, code: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  {auth.type === "otp" && (
+                    <Button onClick={handleSendOtp} disabled={sendOtpMutation.isLoading} className='h-12'>
+                      {sendOtpMutation.isLoading && <Spin indicator={<LoadingOutlined spin />} />}
+                      <span className='ml-2'>Gửi mã OTP</span>
+                    </Button>
+                  )}
+                </>
+              )}
               <div className='mt-2'>
                 <button
                   type='submit'
