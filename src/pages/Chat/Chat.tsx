@@ -94,7 +94,8 @@ export const Chat = () => {
 
   const { data: users } = useQuery<{ data: UsersResponse }>({
     queryKey: ['users'],
-    queryFn: () => chatApi.getUsers()
+    queryFn: () => chatApi.getUsers(),
+    refetchInterval: 3000 // refetch mỗi 5000ms = 5 giây,
   })
 
   const {
