@@ -1,7 +1,22 @@
-import { Carousel } from 'antd'
+import { useQuery } from '@tanstack/react-query'
+import { Carousel, Divider, Empty, Pagination, Spin } from 'antd'
+import productApi from 'src/apis/product.api'
+import useQueryConfig from 'src/hooks/useQueryConfig'
 import Category from 'src/pages/HomePage/Category'
+import Product from 'src/pages/ProductList/Product'
+import { ProductListConfig } from 'src/types/product.type'
 
 export default function HomePage() {
+  const queryConfig = useQueryConfig()
+  console.log(queryConfig)
+  const { data: productData, isLoading } = useQuery({
+    queryKey: ['products', queryConfig],
+    queryFn: () => {
+      return productApi.getProducts(queryConfig as ProductListConfig)
+    },
+    keepPreviousData: true,
+    staleTime: 3 * 60 * 1000
+  })
   return (
     <div>
       <div className='my-5'>
@@ -26,7 +41,35 @@ export default function HomePage() {
           </div>
         </Carousel>
       </div>
-      <Category />
+      <div className='container my-5'>
+        <Category />
+      </div>
+      <div className='container my-5 px-8'>
+        <Divider />
+        <div className='my-6 text-lg font-semibold uppercase text-gray-700'>Sản phẩm mới</div>
+        {isLoading && (
+          <div className='flex items-center justify-center'>
+            <Spin size='large' />
+          </div>
+        )}
+        {productData ? (
+          <>
+            {productData?.data.data.length === 0 ? (
+              <Empty image={Empty.PRESENTED_IMAGE_DEFAULT} />
+            ) : (
+              <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'>
+                {productData.data.data.map((product) => (
+                  <div key={product.id} className='col-span-1'>
+                    <Product product={product} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className='mt-6 flex items-center justify-center'>Không có dữ liệu</div>
+        )}
+      </div>
     </div>
   )
 }
