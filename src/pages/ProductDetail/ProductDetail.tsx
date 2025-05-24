@@ -363,12 +363,14 @@ export default function ProductDetail() {
               <div className='flex flex-col gap-6 md:flex-row'>
                 {/* Shop Avatar & Basic Info */}
                 <div className='flex flex-1 flex-col items-center gap-4 md:flex-row md:items-start'>
-                  <Avatar
-                    size={120}
-                    icon={<UserOutlined />}
-                    src={shopData.data.avatar || undefined}
-                    className='border-4 border-white shadow-lg'
-                  />
+                  <Link to={`/shop/${shopData.data.id}`}>
+                    <Avatar
+                      size={120}
+                      icon={<UserOutlined />}
+                      src={shopData.data.avatar || undefined}
+                      className='border-4 border-white shadow-lg'
+                    />
+                  </Link>
 
                   <div className='flex-1 text-center md:text-left'>
                     <div className='mb-2 flex flex-col gap-2 md:flex-row md:items-center'>
