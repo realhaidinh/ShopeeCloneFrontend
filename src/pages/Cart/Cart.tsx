@@ -254,7 +254,10 @@ export default function Cart() {
                     <span>Yêu thích</span>
                   </div>
                   <Link to={`/shop/${item.shop.id}`}>{item.shop.name}</Link>
-                  <WechatOutlined style={{ color: '#ff6633', fontSize: '1.3rem' }} />
+                  <WechatOutlined
+                    onClick={() => navigate(`/chat/${item.shop.id}`)}
+                    style={{ color: '#ff6633', fontSize: '1.3rem' }}
+                  />
                 </div>
                 <div className='h-[1px] bg-gray-200'></div>
 

@@ -3,25 +3,38 @@
 import type React from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Rate, Spin } from 'antd'
+import { Avatar, Button, Divider, Rate, Spin, Tag } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
 import QuantityController from 'src/components/QuantityController'
 import Product from 'src/pages/ProductList/Product'
 import type { ProductListConfig, Sku } from 'src/types/product.type'
-import { formatCurrency, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
+import { formatCurrency, formatDate, formatNumberToSocialStyle, getIdFromNameId, rateSale } from 'src/utils/utils'
 import purchaseApi from 'src/apis/purchaseApi'
 import { toast } from 'react-toastify'
 import type { StatisticTimerProps } from 'antd'
 import { Col, Row, Statistic } from 'antd'
 import { ClockCircleOutlined } from '@ant-design/icons'
 import NotFound from 'src/pages/NotFound'
+import userApi from 'src/apis/user.api'
+
+import {
+  UserOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  MessageOutlined,
+  PlusOutlined,
+  ShopOutlined,
+  CalendarOutlined
+} from '@ant-design/icons'
 
 const { Timer } = Statistic
 
 export default function ProductDetail() {
+  const navigate = useNavigate()
+
   const queryClient = useQueryClient()
   const { nameId } = useParams()
   const [deadline, setDeadline] = useState(Date.now() + 1000 * 60 * 60) // 1 phút
@@ -32,11 +45,20 @@ export default function ProductDetail() {
     queryFn: () => productApi.getProductDetail(id as string),
     staleTime: 1 * 60 * 1000
   })
+
   const addToCartMutation = useMutation(purchaseApi.addToCart)
 
   const product = productDetailData
   const [selectedSKU, setSelectedSKU] = useState<Sku>({} as Sku)
 
+  const { data: shopData, isLoading: isShopLoading } = useQuery({
+    queryKey: ['shop', product?.data.createdById],
+    queryFn: () => {
+      return userApi.detail(Number(product?.data.createdById))
+    },
+    keepPreviousData: true,
+    staleTime: 3 * 60 * 1000
+  })
   // Set default selected SKU when product data is loaded
   useEffect(() => {
     if (product && product.data.skus.length > 0) {
@@ -334,6 +356,106 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {shopData && shopData.data && (
+        <div className='mt-8'>
+          <div className='container'>
+            <div className='rounded-lg bg-white p-6 shadow-lg'>
+              <div className='flex flex-col gap-6 md:flex-row'>
+                {/* Shop Avatar & Basic Info */}
+                <div className='flex flex-1 flex-col items-center gap-4 md:flex-row md:items-start'>
+                  <Avatar
+                    size={120}
+                    icon={<UserOutlined />}
+                    src={shopData.data.avatar || undefined}
+                    className='border-4 border-white shadow-lg'
+                  />
+
+                  <div className='flex-1 text-center md:text-left'>
+                    <div className='mb-2 flex flex-col gap-2 md:flex-row md:items-center'>
+                      <Link to={`/shop/${shopData.data.id}`}>
+                        <h1 className='text-2xl font-bold text-gray-800'>{shopData.data.name}</h1>
+                      </Link>
+
+                      <Tag color={shopData.data.status === 'ACTIVE' ? 'green' : 'red'} className='text-sm'>
+                        {shopData.data.status}
+                      </Tag>
+                    </div>
+
+                    <div className='mb-4 flex flex-col gap-4 text-sm text-gray-600 md:flex-row'>
+                      <div className='flex items-center gap-1'>
+                        <ShopOutlined />
+                        <span>{shopData.data.role?.name}</span>
+                      </div>
+                      <div className='flex items-center gap-1'>
+                        <CalendarOutlined />
+                        <span>Tham gia {formatDate(shopData.data.createdAt)}</span>
+                      </div>
+                    </div>
+
+                    {/* Shop Stats */}
+                    <div className='grid grid-cols-2 gap-4 text-center md:grid-cols-4'>
+                      <div className='rounded-lg bg-gray-50 p-3'>
+                        <div className='text-orange-500 text-lg font-semibold'>4.8</div>
+                        <div className='text-xs text-gray-500'>Đánh giá</div>
+                      </div>
+                      <div className='rounded-lg bg-gray-50 p-3'>
+                        <div className='text-orange-500 text-lg font-semibold'>98%</div>
+                        <div className='text-xs text-gray-500'>Phản hồi</div>
+                      </div>
+                      <div className='rounded-lg bg-gray-50 p-3'>
+                        <div className='text-orange-500 text-lg font-semibold'>1.2k</div>
+                        <div className='text-xs text-gray-500'>Người theo dõi</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className='flex flex-col gap-3 md:w-48'>
+                  <Button
+                    icon={<MessageOutlined />}
+                    size='large'
+                    className='border-orange-500 text-orange-500 hover:border-orange-600 hover:text-orange-600'
+                    onClick={() => navigate(`/chat/${shopData.data.id}`)}
+                  >
+                    Chat ngay
+                  </Button>
+                </div>
+              </div>
+
+              {/* Shop Details */}
+              <Divider className='my-6' />
+
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                <div className='rounded-lg bg-gray-50 p-4'>
+                  <div className='mb-2 flex items-center gap-2'>
+                    <MailOutlined className='text-orange-500' />
+                    <span className='font-medium text-gray-700'>Email liên hệ</span>
+                  </div>
+                  <p className='text-gray-600'>{shopData.data.email}</p>
+                </div>
+
+                <div className='rounded-lg bg-gray-50 p-4'>
+                  <div className='mb-2 flex items-center gap-2'>
+                    <PhoneOutlined className='text-orange-500' />
+                    <span className='font-medium text-gray-700'>Số điện thoại</span>
+                  </div>
+                  <p className='text-gray-600'>{shopData.data.phoneNumber}</p>
+                </div>
+
+                <div className='rounded-lg bg-gray-50 p-4'>
+                  <div className='mb-2 flex items-center gap-2'>
+                    <ClockCircleOutlined className='text-orange-500' />
+                    <span className='font-medium text-gray-700'>Thời gian phản hồi</span>
+                  </div>
+                  <p className='text-gray-600'>Trong vài phút</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className='mt-8'>
         <div className='container'>
           <div className='mt-8 bg-white p-4 shadow'>
@@ -363,7 +485,7 @@ export default function ProductDetail() {
     </div>
   ) : (
     <div className='container flex min-h-[300px] items-center justify-center'>
-      <NotFound />
+      <Spin size='large' />
     </div>
   )
 }

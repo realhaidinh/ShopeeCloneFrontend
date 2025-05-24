@@ -1,24 +1,51 @@
-import { useQuery } from '@tanstack/react-query'
-import { Carousel, Divider, Empty, Pagination, Spin } from 'antd'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { Carousel, Divider, Empty, Spin } from 'antd'
+import { useEffect, useRef } from 'react'
 import productApi from 'src/apis/product.api'
-import useQueryConfig from 'src/hooks/useQueryConfig'
 import Category from 'src/pages/HomePage/Category'
 import Product from 'src/pages/ProductList/Product'
-import { ProductListConfig } from 'src/types/product.type'
+
+const LIMIT = 10
 
 export default function HomePage() {
-  const queryConfig = useQueryConfig()
-  console.log(queryConfig)
-  const { data: productData, isLoading } = useQuery({
-    queryKey: ['products', queryConfig],
-    queryFn: () => {
-      return productApi.getProducts(queryConfig as ProductListConfig)
-    },
-    keepPreviousData: true,
-    staleTime: 3 * 60 * 1000
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ['products'],
+    queryFn: ({ pageParam = 1 }) => productApi.getProducts({ page: pageParam, limit: LIMIT }),
+    getNextPageParam: (lastPage, allPages) => {
+      const total = lastPage.data.totalItems
+      const currentPage = allPages.length
+      return currentPage * LIMIT < total ? currentPage + 1 : undefined
+    }
   })
+
+  const observerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      {
+        root: null,
+        rootMargin: '0px',
+        threshold: 1.0
+      }
+    )
+    if (observerRef.current) {
+      observer.observe(observerRef.current)
+    }
+    return () => {
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current)
+      }
+    }
+  }, [observerRef.current, hasNextPage, isFetchingNextPage])
+
   return (
     <div>
+      {/* Carousel */}
       <div className='my-5'>
         <Carousel className='mx-auto w-3/4' autoplay={{ dotDuration: true }} autoplaySpeed={3000} arrows>
           <div>
@@ -41,34 +68,49 @@ export default function HomePage() {
           </div>
         </Carousel>
       </div>
+
+      {/* Danh mục */}
       <div className='container my-5'>
         <Category />
       </div>
+
+      {/* Sản phẩm */}
       <div className='container my-5 px-8'>
         <Divider />
         <div className='my-6 text-lg font-semibold uppercase text-gray-700'>Sản phẩm mới</div>
+
         {isLoading && (
           <div className='flex items-center justify-center'>
             <Spin size='large' />
           </div>
         )}
-        {productData ? (
+
+        {data && (
           <>
-            {productData?.data.data.length === 0 ? (
-              <Empty image={Empty.PRESENTED_IMAGE_DEFAULT} />
+            {data.pages[0].data.data.length === 0 ? (
+              <Empty description='Không có sản phẩm' />
             ) : (
               <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'>
-                {productData.data.data.map((product) => (
-                  <div key={product.id} className='col-span-1'>
-                    <Product product={product} />
-                  </div>
-                ))}
+                {data.pages.map((page) =>
+                  page.data.data.map((product) => (
+                    <div key={product.id} className='col-span-1'>
+                      <Product product={product} />
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </>
-        ) : (
-          <div className='mt-6 flex items-center justify-center'>Không có dữ liệu</div>
         )}
+
+        {isFetchingNextPage && (
+          <div className='mt-4 flex items-center justify-center'>
+            <Spin />
+          </div>
+        )}
+
+        {/* Trigger load next page */}
+        <div ref={observerRef} className='h-1'></div>
       </div>
     </div>
   )

@@ -34,6 +34,7 @@ import ManageCategory from 'src/pages/ManageCategory'
 import ChatLayout from './layouts/ChatLayout'
 import GoogleAuth from './pages/GoogleAuth'
 import ForgotPassword from 'src/pages/ForgotPassword'
+import Shop from 'src/pages/Shop'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
@@ -91,6 +92,24 @@ export default function useRouteElements() {
       element: (
         <MainLayout>
           <HomePage />
+        </MainLayout>
+      )
+    },
+    {
+      path: '/not-found',
+      index: true,
+      element: (
+        <MainLayout>
+          <NotFound />
+        </MainLayout>
+      )
+    },
+    {
+      path: '/shop/:shopId',
+      index: true,
+      element: (
+        <MainLayout>
+          <Shop />
         </MainLayout>
       )
     },
