@@ -1,25 +1,29 @@
-import { useMutation } from "@tanstack/react-query"
-import { Form, Input, Button, Spin, message } from "antd"
-import { useState } from "react"
-import authApi from "src/apis/auth.api"
-import profileApi from "src/apis/profile.api"
-import { VerificationCode } from "src/constants/auth.constant"
+import { useMutation } from '@tanstack/react-query'
+import { Form, Input, Button, Spin, message } from 'antd'
+import { useState } from 'react'
+import authApi from 'src/apis/auth.api'
+import profileApi from 'src/apis/profile.api'
+import { VerificationCode } from 'src/constants/auth.constant'
 import { QRCodeCanvas } from 'qrcode.react'
-import {LoadingOutlined} from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 
-export default function Toggle2FA({ user, queryClient }) {
+interface Toggle2FAProps {
+  user: any
+  queryClient: any
+}
+
+export default function Toggle2FA({ user, queryClient }: Toggle2FAProps) {
   const [showSecret, setShowSecret] = useState(false)
   const [auth, setAuth] = useState({ enable: !!user.totpSecret, type: 'otp', code: '', secret: '', uri: '' })
 
   const twoWayAuthMutation = useMutation({
-    mutationFn: () => auth.enable ? profileApi.disable2fa(auth.code) : profileApi.setup2fa(),
+    mutationFn: () => (auth.enable ? profileApi.disable2fa(auth.code) : profileApi.setup2fa()),
     onSuccess: () => {
       message.success('Cập nhật thông tin thành công')
       queryClient.invalidateQueries({ queryKey: ['profile'] })
-
     }
   })
-  const toggle2FA = async (e) => {
+  const toggle2FA = async (e: any) => {
     e.preventDefault()
     const response = await twoWayAuthMutation.mutateAsync()
     const { secret, uri } = response.data
@@ -59,14 +63,18 @@ export default function Toggle2FA({ user, queryClient }) {
           </div>
         )}
         {auth.enable && (
-          <div className='mt-5 flex items-center gap-2 mb-5'>
-            <Input className='w-1/5' placeholder='Nhập OTP' value={auth.code} onChange={(e) => setAuth({ ...auth, code: e.target.value })} />
+          <div className='mt-5 mb-5 flex items-center gap-2'>
+            <Input
+              className='w-1/5'
+              placeholder='Nhập OTP'
+              value={auth.code}
+              onChange={(e) => setAuth({ ...auth, code: e.target.value })}
+            />
             <Button onClick={handleSendOtp} disabled={sendOtpMutation.isLoading}>
               {sendOtpMutation.isLoading && <Spin indicator={<LoadingOutlined spin />} />}
               <span className='ml-2'>Gửi mã OTP</span>
             </Button>
           </div>
-
         )}
         <Button onClick={toggle2FA} disabled={auth.enable && !auth.code.trim()}>
           {auth.enable ? 'Tắt' : 'Bật'} xác thực 2 lớp
