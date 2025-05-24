@@ -22,7 +22,7 @@ type FormData = {
   totpCode?: string,
   code?: string,
 }
-function getCodeKey(type: string) : string {
+function getCodeKey(type: string): string {
   return type === 'otp' ? 'code' : 'totpCode'
 }
 export default function Login() {
@@ -47,8 +47,8 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const loginMutation = useMutation({
     mutationFn: (body: FormData) => {
-      if(auth.enable) {
-        body = {...body, [getCodeKey(auth.type)]: auth.code}
+      if (auth.enable) {
+        body = { ...body, [getCodeKey(auth.type)]: auth.code }
       }
       return authApi.login(body)
     }
@@ -124,40 +124,39 @@ export default function Login() {
               />
               {auth.enable && (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Code Type</label>
-                    <select
-                      className="w-full border rounded-xl p-2"
-                      value={auth.type}
-                      onChange={(e) => {
-                        setAuth({ ...auth, type: e.target.value });
-                      }}
-                    >
-                      <option value="otp">OTP</option>
-                      <option value="2fa">2FA</option>
-                    </select>
-                  </div>
+                  <label className="block text-sm font-medium mb-1">Code Type</label>
+                  <select
+                    className="w-full border rounded-xl p-2"
+                    value={auth.type}
+                    onChange={(e) => {
+                      setAuth({ ...auth, type: e.target.value });
+                    }}
+                  >
+                    <option value="otp">OTP</option>
+                    <option value="2fa">2FA</option>
+                  </select>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      {auth.type === "2fa" ? "2FA Code" : "OTP Code"}
-                    </label>
-                    <input
-                      type="text"
-                      name={auth.type === '2fa' ? 'totpCode' : 'code'}
-                      className="w-full border rounded-xl p-2"
-                      value={auth.code}
-                      onChange={(e) => setAuth({ ...auth, code: e.target.value })}
-                      required
-                    />
-                  </div>
+                  <label className="block text-sm font-medium mb-1">
+                    {auth.type === "2fa" ? "2FA Code" : "OTP Code"}
+                  </label>
+                  <div className='flex'>
+
+                  <input
+                    type="text"
+                    name={auth.type === '2fa' ? 'totpCode' : 'code'}
+                    className="w-1/2 border rounded-xl p-2 mr-4"
+                    value={auth.code}
+                    onChange={(e) => setAuth({ ...auth, code: e.target.value })}
+                    required
+                  />
 
                   {auth.type === "otp" && (
-                    <Button onClick={handleSendOtp} disabled={sendOtpMutation.isLoading} className='h-12'>
+                    <Button onClick={handleSendOtp} disabled={sendOtpMutation.isLoading}>
                       {sendOtpMutation.isLoading && <Spin indicator={<LoadingOutlined spin />} />}
                       <span className='ml-2'>Gửi mã OTP</span>
                     </Button>
                   )}
+                  </div>
                 </>
               )}
               <div className='mt-2'>

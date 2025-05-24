@@ -52,6 +52,10 @@ export default function ManageProfile() {
                     {user.phoneNumber || 'Chưa cập nhật'}
                   </Descriptions.Item>
 
+                  <Descriptions.Item label='Bảo mật 2 lớp' span={2}>
+                    {!!user.totpSecret ? 'Đang bật' : 'Đang tắt'}
+                  </Descriptions.Item>
+                  
                   <Descriptions.Item label='Trạng thái tài khoản' span={2}>
                     {user.status === 'ACTIVE' ? (
                       <span className='text-green-500'>Hoạt động</span>
